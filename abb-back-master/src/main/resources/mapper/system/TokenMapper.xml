@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youlai.boot.system.mapper.TokenMapper">
+
+    <!-- Token分页列表 -->
+    <select id="getTokenPage" resultType="com.youlai.boot.system.model.bo.TokenBO">
+        SELECT
+            t.id,
+            t.token_name,
+            t.token_code,
+            t.door_preinstall_time,
+            t.door_time,
+            t.grid_preinstall_time,
+            t.grid_time,
+            t.top_plate_time,
+            t.bottom_plate_time,
+            t.shell_assembly_time,
+            t.total_assembly_time,
+            t.create_time,
+            t.update_time
+        FROM
+            abb_token t
+        <where>
+            t.is_deleted = 0
+            <if test='queryParams.tokenCode!=null and queryParams.tokenCode.trim() neq ""'>
+                AND t.token_code LIKE CONCAT('%',#{queryParams.tokenCode},'%')
+            </if>
+            <if test='queryParams.keywords!=null and queryParams.keywords.trim() neq ""'>
+                AND (
+                    t.token_name LIKE CONCAT('%',#{queryParams.keywords},'%')
+                    OR t.token_code LIKE CONCAT('%',#{queryParams.keywords},'%')
+                )
+            </if>
+            <if test='queryParams.tokenName!=null and queryParams.tokenName.trim() neq ""'>
+                AND t.token_name LIKE CONCAT('%',#{queryParams.tokenName},'%')
+            </if>
+        </where>
+        <choose>
+            <!-- 如果排序参数都传入 -->
+            <when test="queryParams.field != null and queryParams.field != '' and queryParams.direction != null">
+                ORDER BY t.${queryParams.field} ${queryParams.direction}
+            </when>
+            <!-- 默认排序 -->
+            <otherwise>
+                ORDER BY t.id DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- Token表单信息映射 -->
+    <resultMap id="TokenFormMap" type="com.youlai.boot.system.model.form.TokenForm">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="tokenName" column="token_name" jdbcType="VARCHAR"/>
+        <result property="tokenCode" column="token_code" jdbcType="VARCHAR"/>
+        <result property="doorPreinstallTime" column="door_preinstall_time" jdbcType="INTEGER"/>
+        <result property="doorTime" column="door_time" jdbcType="INTEGER"/>
+        <result property="gridPreinstallTime" column="grid_preinstall_time" jdbcType="INTEGER"/>
+        <result property="gridTime" column="grid_time" jdbcType="INTEGER"/>
+        <result property="topPlateTime" column="top_plate_time" jdbcType="INTEGER"/>
+        <result property="bottomPlateTime" column="bottom_plate_time" jdbcType="INTEGER"/>
+        <result property="shellAssemblyTime" column="shell_assembly_time" jdbcType="INTEGER"/>
+        <result property="totalAssemblyTime" column="total_assembly_time" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 根据TokenID获取Token表单数据 -->
+    <select id="getTokenFormData" resultMap="TokenFormMap">
+        SELECT
+            id,
+            token_name,
+            token_code,
+            door_preinstall_time,
+            door_time,
+            grid_preinstall_time,
+            grid_time,
+            top_plate_time,
+            bottom_plate_time,
+            shell_assembly_time,
+            total_assembly_time
+        FROM
+            abb_token
+        WHERE
+            id = #{tokenId} AND is_deleted = 0
+    </select>
+
+</mapper>

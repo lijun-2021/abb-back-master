@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youlai.boot.system.mapper.ResourceStatusMapper">
+
+    <!-- 当日资源/状态分页列表 -->
+    <select id="getResourceStatusPage" resultType="com.youlai.boot.system.model.bo.ResourceStatusBO">
+        SELECT
+            rs.id,
+            rs.process_station_id,
+            rs.process_worker_id,
+            rs.process_station_status,
+            rs.warehouse_id,
+            rs.warehouse_total_free,
+            rs.warehouse_current_free,
+            rs.warehouse_current_used,
+            rs.rgv_flag,
+            rs.agv_flag,
+            rs.robot_arm_flag,
+            rs.create_time,
+            rs.update_time
+        FROM
+            abb_daily_resource_status rs
+        <where>
+            rs.is_deleted = 0
+            <if test='queryParams.processStationId!=null and queryParams.processStationId.trim() neq ""'>
+                AND rs.process_station_id LIKE CONCAT('%',#{queryParams.processStationId},'%')
+            </if>
+            <if test='queryParams.keywords!=null and queryParams.keywords.trim() neq ""'>
+                AND (
+                    rs.process_station_id LIKE CONCAT('%',#{queryParams.keywords},'%')
+                    OR rs.warehouse_id LIKE CONCAT('%',#{queryParams.keywords},'%')
+                )
+            </if>
+            <if test='queryParams.processStationStatus!=null and queryParams.processStationStatus.trim() neq ""'>
+                AND rs.process_station_status = #{queryParams.processStationStatus}
+            </if>
+            <if test='queryParams.warehouseId!=null and queryParams.warehouseId.trim() neq ""'>
+                AND rs.warehouse_id LIKE CONCAT('%',#{queryParams.warehouseId},'%')
+            </if>
+        </where>
+        <choose>
+            <!-- 如果排序参数都传入 -->
+            <when test="queryParams.field != null and queryParams.field != '' and queryParams.direction != null">
+                ORDER BY rs.${queryParams.field} ${queryParams.direction}
+            </when>
+            <!-- 默认排序 -->
+            <otherwise>
+                ORDER BY rs.id DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 当日资源/状态表单信息映射 -->
+    <resultMap id="ResourceStatusFormMap" type="com.youlai.boot.system.model.form.ResourceStatusForm">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="processStationId" column="process_station_id" jdbcType="VARCHAR"/>
+        <result property="processWorkerId" column="process_worker_id" jdbcType="VARCHAR"/>
+        <result property="processStationStatus" column="process_station_status" jdbcType="VARCHAR"/>
+        <result property="warehouseId" column="warehouse_id" jdbcType="VARCHAR"/>
+        <result property="warehouseTotalFree" column="warehouse_total_free" jdbcType="INTEGER"/>
+        <result property="warehouseCurrentFree" column="warehouse_current_free" jdbcType="INTEGER"/>
+        <result property="warehouseCurrentUsed" column="warehouse_current_used" jdbcType="INTEGER"/>
+        <result property="rgvFlag" column="rgv_flag" jdbcType="VARCHAR"/>
+        <result property="agvFlag" column="agv_flag" jdbcType="VARCHAR"/>
+        <result property="robotArmFlag" column="robot_arm_flag" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 根据ID获取当日资源/状态表单数据 -->
+    <select id="getResourceStatusFormData" resultMap="ResourceStatusFormMap">
+        SELECT
+            id,
+            process_station_id,
+            process_worker_id,
+            process_station_status,
+            warehouse_id,
+            warehouse_total_free,
+            warehouse_current_free,
+            warehouse_current_used,
+            rgv_flag,
+            agv_flag,
+            robot_arm_flag
+        FROM
+            abb_daily_resource_status
+        WHERE
+            id = #{resourceStatusId} AND is_deleted = 0
+    </select>
+
+</mapper>

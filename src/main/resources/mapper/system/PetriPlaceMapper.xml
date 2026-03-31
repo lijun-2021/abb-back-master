@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youlai.boot.system.mapper.PetriPlaceMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.youlai.boot.system.model.entity.PetriPlace">
+        <id column="id" property="id"/>
+        <result column="place_name" property="placeName"/>
+        <result column="capacity" property="capacity"/>
+        <result column="pre_arcs" property="preArcs"/>
+        <result column="post_arcs" property="postArcs"/>
+        <result column="is_control_place" property="isControlPlace"/>
+        <result column="is_time_place" property="isTimePlace"/>
+        <result column="proficiency" property="proficiency"/>
+        <result column="stage" property="stage"/>
+        <result column="color" property="color"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_t ime" property="updateTime"/>
+    </resultMap>
+
+    <!-- Petri 库所分页列表查询 -->
+    <select id="getPetriPlacePage" resultType="com.youlai.boot.system.model.bo.PetriPlaceBO">
+        SELECT
+        p.id,
+        p.place_name AS placeName,
+        p.capacity,
+        p.pre_arcs AS preArcs,
+        p.post_arcs AS postArcs,
+        p.is_control_place AS isControlPlace,
+        p.is_time_place AS isTimePlace,
+        p.proficiency,
+        p.stage,
+        p.color
+        FROM petri_place p
+        <where>
+            <if test="queryParams.placeName != null and queryParams.placeName != ''">
+                AND p.place_name LIKE CONCAT('%', #{queryParams.placeName}, '%')
+            </if>
+            <if test="queryParams.keywords != null and queryParams.keywords != ''">
+                AND (p.place_name LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR p.color LIKE CONCAT('%', #{queryParams.keywords}, '%'))
+            </if>
+            <if test="queryParams.isControlPlace != null">
+                AND p.is_control_place = #{queryParams.isControlPlace}
+            </if>
+            <if test="queryParams.isTimePlace != null">
+                AND p.is_time_place = #{queryParams.isTimePlace}
+            </if>
+            <if test="queryParams.stage != null">
+                AND p.stage = #{queryParams.stage}
+            </if>
+            <if test="queryParams.color != null and queryParams.color != ''">
+                AND p.color = #{queryParams.color}
+            </if>
+        </where>
+        ORDER BY
+        <choose>
+            <when test="queryParams.field != null and queryParams.field != ''">
+                ${queryParams.field} ${queryParams.direction}
+            </when>
+            <otherwise>
+                p.id ASC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 获取 Petri 库所表单详情 -->
+    <select id="getPetriPlaceFormData" resultType="com.youlai.boot.system.model.form.PetriPlaceForm">
+        SELECT
+            p.id,
+            p.place_name AS placeName,
+            p.capacity,
+            p.pre_arcs AS preArcs,
+            p.post_arcs AS postArcs,
+            p.is_control_place AS isControlPlace,
+            p.is_time_place AS isTimePlace,
+            p.proficiency,
+            p.stage,
+            p.color
+        FROM petri_place p
+        WHERE p.id = #{placeId}
+    </select>
+
+</mapper>

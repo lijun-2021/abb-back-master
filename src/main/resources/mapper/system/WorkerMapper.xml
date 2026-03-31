@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youlai.boot.system.mapper.WorkerMapper">
+
+    <!-- 工人分页列表 -->
+    <select id="getWorkerPage" resultType="com.youlai.boot.system.model.bo.WorkerBO">
+        SELECT
+            w.id,
+            w.worker_code,
+            w.gender,
+            w.height,
+            w.work_years,
+            w.skill_level,
+            w.clock_in_time,
+            w.clock_out_time,
+            w.process_station_id,
+            w.scheduled_workpiece_ids,
+            w.current_workpiece_id,
+            w.next_workpiece_id,
+            w.create_time,
+            w.update_time
+        FROM
+            abb_worker w
+        <where>
+            w.is_deleted = 0
+            <if test='queryParams.workerCode!=null and queryParams.workerCode.trim() neq ""'>
+                AND w.worker_code LIKE CONCAT('%',#{queryParams.workerCode},'%')
+            </if>
+            <if test='queryParams.keywords!=null and queryParams.keywords.trim() neq ""'>
+                AND (
+                    w.worker_code LIKE CONCAT('%',#{queryParams.keywords},'%')
+                )
+            </if>
+            <if test='queryParams.gender!=null'>
+                AND w.gender = #{queryParams.gender}
+            </if>
+            <if test='queryParams.skillLevel!=null'>
+                AND w.skill_level = #{queryParams.skillLevel}
+            </if>
+        </where>
+        <choose>
+            <!-- 如果排序参数都传入 -->
+            <when test="queryParams.field != null and queryParams.field != '' and queryParams.direction != null">
+                ORDER BY w.${queryParams.field} ${queryParams.direction}
+            </when>
+            <!-- 默认排序 -->
+            <otherwise>
+                ORDER BY w.id DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 工人表单信息映射 -->
+    <resultMap id="WorkerFormMap" type="com.youlai.boot.system.model.form.WorkerForm">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="workerCode" column="worker_code" jdbcType="VARCHAR"/>
+        <result property="gender" column="gender" jdbcType="INTEGER"/>
+        <result property="height" column="height" jdbcType="VARCHAR"/>
+        <result property="workYears" column="work_years" jdbcType="VARCHAR"/>
+        <result property="skillLevel" column="skill_level" jdbcType="VARCHAR"/>
+        <result property="clockInTime" column="clock_in_time" jdbcType="VARCHAR"/>
+        <result property="clockOutTime" column="clock_out_time" jdbcType="VARCHAR"/>
+        <result property="processStationId" column="process_station_id" jdbcType="VARCHAR"/>
+        <result property="scheduledWorkpieceIds" column="scheduled_workpiece_ids" jdbcType="VARCHAR"/>
+        <result property="currentWorkpieceId" column="current_workpiece_id" jdbcType="VARCHAR"/>
+        <result property="nextWorkpieceId" column="next_workpiece_id" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 根据工人ID获取工人表单数据 -->
+    <select id="getWorkerFormData" resultMap="WorkerFormMap">
+        SELECT
+            id,
+            worker_code,
+            gender,
+            height,
+            work_years,
+            skill_level,
+            clock_in_time,
+            clock_out_time,
+            process_station_id,
+            scheduled_workpiece_ids,
+            current_workpiece_id,
+            next_workpiece_id
+        FROM
+            abb_worker
+        WHERE
+            id = #{workerId} AND is_deleted = 0
+    </select>
+
+</mapper>

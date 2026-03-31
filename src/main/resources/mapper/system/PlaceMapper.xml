@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youlai.boot.system.mapper.PlaceMapper">
+
+    <!-- 库所分页列表 -->
+    <select id="getPlacePage" resultType="com.youlai.boot.system.model.bo.PlaceBO">
+        SELECT
+            p.id,
+            p.place_name,
+            p.capacity,
+            p.pre_transition,
+            p.post_transition,
+            p.place_type,
+            p.timed_place_flag,
+            p.process_station_id,
+            p.stage_flag,
+            p.place_color,
+            p.create_time,
+            p.update_time
+        FROM
+            abb_place p
+        <where>
+            p.is_deleted = 0
+            <if test='queryParams.placeName!=null and queryParams.placeName.trim() neq ""'>
+                AND p.place_name LIKE CONCAT('%',#{queryParams.placeName},'%')
+            </if>
+            <if test='queryParams.keywords!=null and queryParams.keywords.trim() neq ""'>
+                AND (
+                    p.place_name LIKE CONCAT('%',#{queryParams.keywords},'%')
+                )
+            </if>
+            <if test='queryParams.placeType!=null'>
+                AND p.place_type = #{queryParams.placeType}
+            </if>
+            <if test='queryParams.processStationId!=null'>
+                AND p.process_station_id LIKE CONCAT('%',#{queryParams.processStationId},'%')
+            </if>
+        </where>
+        <choose>
+            <!-- 如果排序参数都传入 -->
+            <when test="queryParams.field != null and queryParams.field != '' and queryParams.direction != null">
+                ORDER BY p.${queryParams.field} ${queryParams.direction}
+            </when>
+            <!-- 默认排序 -->
+            <otherwise>
+                ORDER BY p.id DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 库所表单信息映射 -->
+    <resultMap id="PlaceFormMap" type="com.youlai.boot.system.model.form.PlaceForm">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="placeName" column="place_name" jdbcType="VARCHAR"/>
+        <result property="capacity" column="capacity" jdbcType="INTEGER"/>
+        <result property="preTransition" column="pre_transition" jdbcType="VARCHAR"/>
+        <result property="postTransition" column="post_transition" jdbcType="VARCHAR"/>
+        <result property="placeType" column="place_type" jdbcType="VARCHAR"/>
+        <result property="timedPlaceFlag" column="timed_place_flag" jdbcType="BOOLEAN"/>
+        <result property="processStationId" column="process_station_id" jdbcType="VARCHAR"/>
+        <result property="stageFlag" column="stage_flag" jdbcType="INTEGER"/>
+        <result property="placeColor" column="place_color" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 根据库所ID获取库所表单数据 -->
+    <select id="getPlaceFormData" resultMap="PlaceFormMap">
+        SELECT
+            id,
+            place_name,
+            capacity,
+            pre_transition,
+            post_transition,
+            place_type,
+            timed_place_flag,
+            process_station_id,
+            stage_flag,
+            place_color
+        FROM
+            abb_place
+        WHERE
+            id = #{placeId} AND is_deleted = 0
+    </select>
+
+</mapper>

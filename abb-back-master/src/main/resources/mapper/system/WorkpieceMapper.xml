@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youlai.boot.system.mapper.WorkpieceMapper">
+
+    <resultMap id="BaseResultMap" type="com.youlai.boot.system.model.entity.Workpiece">
+        <id column="id" property="id"/>
+        <result column="sn" property="sn"/>
+        <result column="code" property="code"/>
+        <result column="model" property="model"/>
+        <result column="harness_count" property="harnessCount"/>
+        <result column="harness_type" property="harnessType"/>
+        <result column="terminal_type" property="terminalType"/>
+        <result column="length" property="length"/>
+        <result column="width" property="width"/>
+        <result column="height" property="height"/>
+        <result column="process_flow" property="processFlow"/>
+        <result column="current_status" property="currentStatus"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="BaseColumnList">
+        id, sn, code, model, harness_count, harness_type, terminal_type, length, width, height, process_flow, current_status, create_time, update_time, create_by, update_by, is_deleted
+    </sql>
+
+    <select id="getWorkpiecePage" resultType="com.youlai.boot.system.model.bo.WorkpieceBO">
+        SELECT
+            <include refid="BaseColumnList"/>
+        FROM abb_workpiece t
+        WHERE t.is_deleted = 0
+        <if test="queryParams.keywords != null and queryParams.keywords != ''">
+            AND (
+                t.sn LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR t.code LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR t.model LIKE CONCAT('%', #{queryParams.keywords}, '%')
+            )
+        </if>
+        <if test="queryParams.sn != null and queryParams.sn != ''">
+            AND t.sn LIKE CONCAT('%', #{queryParams.sn}, '%')
+        </if>
+        <if test="queryParams.code != null and queryParams.code != ''">
+            AND t.code LIKE CONCAT('%', #{queryParams.code}, '%')
+        </if>
+        <if test="queryParams.model != null and queryParams.model != ''">
+            AND t.model LIKE CONCAT('%', #{queryParams.model}, '%')
+        </if>
+        <if test="queryParams.currentStatus != null and queryParams.currentStatus != ''">
+            AND t.current_status = #{queryParams.currentStatus}
+        </if>
+        ORDER BY
+        <choose>
+            <when test="queryParams.field != null and queryParams.field != ''">
+                <choose>
+                    <when test="queryParams.direction.name() == 'DESC'">
+                    t.${queryParams.field} DESC
+                </when>
+                <otherwise>
+                    t.${queryParams.field} ASC
+                </otherwise>
+            </choose>
+        </when>
+        <otherwise>
+            t.create_time DESC
+        </otherwise>
+        </choose>
+    </select>
+
+    <!-- 工件表单信息映射 -->
+    <resultMap id="WorkpieceFormMap" type="com.youlai.boot.system.model.form.WorkpieceForm">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="sn" column="sn" jdbcType="VARCHAR"/>
+        <result property="code" column="code" jdbcType="VARCHAR"/>
+        <result property="model" column="model" jdbcType="VARCHAR"/>
+        <result property="harnessCount" column="harness_count" jdbcType="INTEGER"/>
+        <result property="harnessType" column="harness_type" jdbcType="VARCHAR"/>
+        <result property="terminalType" column="terminal_type" jdbcType="VARCHAR"/>
+        <result property="length" column="length" jdbcType="VARCHAR"/>
+        <result property="width" column="width" jdbcType="VARCHAR"/>
+        <result property="height" column="height" jdbcType="VARCHAR"/>
+        <result property="processFlow" column="process_flow" jdbcType="VARCHAR"/>
+        <result property="currentStatus" column="current_status" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 根据工件ID获取工件表单数据 -->
+    <select id="getWorkpieceFormData" resultMap="WorkpieceFormMap">
+        SELECT
+            id,
+            sn,
+            code,
+            model,
+            harness_count,
+            harness_type,
+            terminal_type,
+            length,
+            width,
+            height,
+            process_flow,
+            current_status
+        FROM
+            abb_workpiece
+        WHERE
+            id = #{workpieceId} AND is_deleted = 0
+    </select>
+</mapper>
