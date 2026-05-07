@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youlai.boot.system.mapper.SwitchCabinetMapper">
+
+    <!-- 开关柜分页列表查询 -->
+    <select id="getSwitchCabinetPage" resultType="com.youlai.boot.system.model.vo.SwitchCabinetPageVO">
+        SELECT
+        sc.id,
+        sc.sn_code AS snCode,
+        sc.production_line AS productionLine,
+        sc.offline_time AS offlineTime,
+        sc.function_starttime AS functionStarttime,
+        sc.function_endtime AS functionEndtime,
+        sc.function_emp_name AS functionEmpName,
+        sc.area,
+        sc.create_time AS createTime,
+        sc.update_time AS updateTime,
+        cd.sn_h_code AS snHCode,
+        cd.sn_l_code AS snLCode,
+        cd.h_ncr_discription AS hNcrDiscription,
+        cd.l_ncr_discription AS lNcrDiscription
+        FROM
+        fqc_switch_cabinet sc
+        LEFT JOIN fqc_cabinet_detail cd ON sc.sn_code = cd.sn_code AND cd.is_deleted = 0
+        <where>
+            sc.is_deleted = 0
+            <!-- SN号模糊查询 -->
+            <if test="queryParams.snCode != null and queryParams.snCode.trim() neq ''">
+                AND sc.sn_code LIKE CONCAT('%', #{queryParams.snCode}, '%')
+            </if>
+            <!-- 产线模糊查询 -->
+            <if test="queryParams.productionLine != null and queryParams.productionLine.trim() neq ''">
+                AND sc.production_line LIKE CONCAT('%', #{queryParams.productionLine}, '%')
+            </if>
+            <!-- 检测区域模糊查询 -->
+            <if test="queryParams.area != null and queryParams.area.trim() neq ''">
+                AND sc.area LIKE CONCAT('%', #{queryParams.area}, '%')
+            </if>
+            <!-- 关键字查询 -->
+            <if test="queryParams.keywords != null and queryParams.keywords.trim() neq ''">
+                AND (
+                sc.sn_code LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR sc.production_line LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR sc.area LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                )
+            </if>
+            <!-- 下线时间范围查询 -->
+            <if test="queryParams.offlineTime != null and queryParams.offlineTime.size() > 0">
+                <if test="queryParams.offlineTime[0] != null and queryParams.offlineTime[0] != ''">
+                    <bind name="startDate" value="queryParams.offlineTime[0].length() == 10 ? queryParams.offlineTime[0] + ' 00:00:00' : queryParams.offlineTime[0]"/>
+                    AND sc.offline_time &gt;= #{startDate}
+                </if>
+                <if test="queryParams.offlineTime[1] != null and queryParams.offlineTime[1] != ''">
+                    <bind name="endDate" value="queryParams.offlineTime[1].length() == 10 ? queryParams.offlineTime[1] + ' 23:59:59' : queryParams.offlineTime[1]"/>
+                    AND sc.offline_time &lt;= #{endDate}
+                </if>
+            </if>
+        </where>
+        ORDER BY sc.offline_time ASC
+    </select>
+
+
+</mapper>

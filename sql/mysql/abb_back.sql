@@ -17,6 +17,102 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+CREATE TABLE `fqc_display` (
+                               `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                               `fqc_daily_input` bigint DEFAULT NULL COMMENT '每天下线开关柜数量',
+                               `fqc_daily_output` bigint DEFAULT NULL COMMENT '每天挂证开关柜数量',
+                               `fqc_quantity_instock` bigint DEFAULT NULL COMMENT '历史库存开关柜数量',
+                               `fqc_withstand_undistributed` bigint DEFAULT NULL COMMENT '下线待分配数量',
+                               `fqc_function_undistributed` bigint DEFAULT NULL COMMENT '功能完成待挂证数量',
+                               `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                               `is_deleted` tinyint DEFAULT NULL COMMENT '0：未删除， 1 ：已删除',
+                               PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='开关柜数量展示';
+
+-- ----------------------------
+-- Table structure for fqc_cabinet_detail
+-- ----------------------------
+DROP TABLE IF EXISTS `fqc_cabinet_detail`;
+CREATE TABLE `fqc_cabinet_detail` (
+                                      `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                      `sn_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '开关柜SN号',
+                                      `sn_h_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '高压柜SN号',
+                                      `h_ncr_discription` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '高压柜NCR描述',
+                                      `sn_l_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '低压柜SN号',
+                                      `l_ncr_discription` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '低压柜NCR描述',
+                                      `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                      `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                      `is_deleted` tinyint DEFAULT '0' COMMENT '0-未删除 1-已删除',
+                                      PRIMARY KEY (`id`) USING BTREE,
+                                      KEY `idx_sn_code` (`sn_code`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='高低压柜明细';
+
+-- ----------------------------
+-- Table structure for fqc_employee_task
+-- ----------------------------
+DROP TABLE IF EXISTS `fqc_employee_task`;
+CREATE TABLE `fqc_employee_task`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `emp_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '员工ID',
+  `emp_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '员工姓名',
+  `task_type` tinyint NOT NULL COMMENT '任务类型:1-耐压,2-功能',
+  `sn_code1` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '分配SN1号',
+  `sn_code2` varchar(64) DEFAULT NULL COMMENT '分配SN2号',
+  `sn_code3` varchar(64) DEFAULT NULL COMMENT '分配SN3号',
+  `sn_code4` varchar(64) DEFAULT NULL COMMENT '分配SN4号',
+  `sn_code5` varchar(64) DEFAULT NULL COMMENT '分配SN5号',
+  `sn_code6` varchar(64) DEFAULT NULL COMMENT '分配SN6号',
+  `sn_code7` varchar(64) DEFAULT NULL COMMENT '分配SN7号',
+  `sn_code8` varchar(64) DEFAULT NULL COMMENT '分配SN8号',
+  `sn_code9` varchar(64) DEFAULT NULL COMMENT '分配SN9号',
+  `sn_code10` varchar(64) DEFAULT NULL COMMENT '分配SN10号',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` tinyint DEFAULT '0' COMMENT '0-未删除 1-已删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_emp_task` (`emp_id`,`task_type`) USING BTREE COMMENT '员工+类型+序号唯一'
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '员工任务分配表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for fqc_schedule_record
+-- ----------------------------
+DROP TABLE IF EXISTS `fqc_schedule_record`;
+CREATE TABLE `fqc_schedule_record`  (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `sn_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT 'SN号',
+    `operate_type` tinyint NOT NULL COMMENT '操作类型 1-保存耐压员工 2-保存功能员工 3-状态更新',
+    `before_value` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '修改前值',
+    `after_value` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '修改后值',
+    `operate_user` bigint NULL DEFAULT NULL COMMENT '操作人ID',
+    `operate_user_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '操作人姓名',
+    `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    INDEX `idx_sn_code`(`sn_code` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '排程操作记录' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for fqc_switch_cabinet
+-- ----------------------------
+DROP TABLE IF EXISTS `fqc_switch_cabinet`;
+CREATE TABLE `fqc_switch_cabinet`  (
+   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+   `sn_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '开关柜SN号',
+   `production_line` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '产线',
+   `offline_time` datetime DEFAULT NULL COMMENT '下线时间',
+   `function_starttime` datetime DEFAULT NULL COMMENT '功能检测开始时间',
+   `function_endtime` datetime DEFAULT NULL COMMENT '功能检测结束时间',
+   `function_emp_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '功能员工姓名',
+   `area` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '检测区域',
+   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+   `is_deleted` tinyint DEFAULT '0' COMMENT '0-未删除 1-已删除',
+   PRIMARY KEY (`id`) USING BTREE,
+   UNIQUE KEY `uk_sn_code` (`sn_code`) USING BTREE COMMENT 'SN唯一'
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '开关柜主表' ROW_FORMAT = Dynamic;
+
+
+
 -- ----------------------------
 -- Table structure for ai_command_record
 -- ----------------------------

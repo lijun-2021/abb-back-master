@@ -30,6 +30,8 @@ public enum LogModuleEnum {
     ALGORITHM("算法"),
     REALTIME_SCHEDULE("实时调度"),
     TRANSITION("变迁"),
+    FQC_SWITCH_CABINET("FQC开关柜"),
+    FQC_EMPLOYEE_TASK("FQC员工任务"),
     OTHER("其他");
 
     @JsonValue

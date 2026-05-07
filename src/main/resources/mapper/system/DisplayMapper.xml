@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youlai.boot.system.mapper.DisplayMapper">
+
+    <!-- 开关柜数据展示分页列表查询 -->
+    <select id="getDisplayPage" resultType="com.youlai.boot.system.model.vo.DisplayPageVO">
+        SELECT
+        id,
+        fqc_daily_input AS fqcDailyInput,
+        fqc_daily_output AS fqcDailyOutput,
+        fqc_quantity_instock AS fqcQuantityInstock,
+        fqc_withstand_undistributed AS fqcWithstandUndistributed,
+        fqc_function_undistributed AS fqcFunctionUndistributed,
+        (fqc_daily_input - IFNULL(fqc_withstand_undistributed, 0)) AS fqcAllocated,
+        (fqc_daily_output + IFNULL(fqc_function_undistributed, 0)) AS fqcFunctionalTestOutput,
+        DATE(create_time) AS createTime,
+        DATE(update_time) AS updateTime
+        FROM
+        fqc_display
+        <where>
+            (is_deleted = 0 OR is_deleted IS NULL)
+            <!-- 关键字查询 -->
+            <if test="queryParams.keywords != null and queryParams.keywords.trim() neq ''">
+                AND (
+                fqc_daily_input LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR fqc_daily_output LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR fqc_quantity_instock LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR fqc_withstand_undistribited LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR fqc_function_undistribited LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                )
+            </if>
+            <!-- 创建时间范围查询 -->
+            <if test="queryParams.createTimeStart != null and queryParams.createTimeStart.trim() neq ''">
+                AND DATE(create_time) &gt;= #{queryParams.createTimeStart}
+            </if>
+            <if test="queryParams.createTimeEnd != null and queryParams.createTimeEnd.trim() neq ''">
+                AND DATE(create_time) &lt;= #{queryParams.createTimeEnd}
+            </if>
+            <!-- 更新时间范围查询 -->
+            <if test="queryParams.updateTimeStart != null and queryParams.updateTimeStart.trim() neq ''">
+                AND DATE(update_time) &gt;= #{queryParams.updateTimeStart}
+            </if>
+            <if test="queryParams.updateTimeEnd != null and queryParams.updateTimeEnd.trim() neq ''">
+                AND DATE(update_time) &lt;= #{queryParams.updateTimeEnd}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

@@ -1,6 +1,8 @@
 package com.youlai.boot.plugin.mybatis;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.youlai.boot.system.model.entity.SwitchCabinet;
+import com.youlai.boot.system.model.entity.EmployeeTask;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +35,15 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
      */
     @Override
     public void updateFill(MetaObject metaObject) {
-        this.strictUpdateFill(metaObject, "updateTime", LocalDateTime::now, LocalDateTime.class);
+        Object originalObject = metaObject.getOriginalObject();
+
+        // 只有 SwitchCabinet和EmployeeTask 实体强制更新 updateTime
+        if (originalObject instanceof SwitchCabinet|| originalObject instanceof EmployeeTask) {
+            metaObject.setValue("updateTime", LocalDateTime.now());
+        } else {
+            // 其他表保持原有逻辑：仅当 updateTime 为 null 时才更新
+            this.strictUpdateFill(metaObject, "updateTime", LocalDateTime::now, LocalDateTime.class);
+        }
     }
 
 }
