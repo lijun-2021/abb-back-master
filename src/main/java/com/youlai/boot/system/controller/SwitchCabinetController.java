@@ -45,16 +45,6 @@ public class SwitchCabinetController {
         return PageResult.success(result);
     }
 
-//    @Operation(summary = "获取开关柜详情列表（支持模糊搜索）")
-//    @GetMapping("/detail")
-//    @Log(value = "获取开关柜详情", module = LogModuleEnum.OTHER)
-//    public Result<List<SwitchCabinetDetailVO>> getSwitchCabinetDetail(
-//            @Parameter(description = "SN号（支持模糊匹配）") @RequestParam String snCode
-//    ) {
-//        List<SwitchCabinetDetailVO> detailList = switchCabinetService.getSwitchCabinetDetailList(snCode);
-//        return Result.success(detailList);
-//    }
-
     @Operation(summary = "新增开关柜")
     @PostMapping
     //@PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:add')")
@@ -90,35 +80,4 @@ public class SwitchCabinetController {
         return Result.judge(result);
     }
 
-//    @Operation(summary = "分配耐压员工信息")
-//    @PostMapping("/withstand-employee")
-//    @PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:assign')")
-//    @RepeatSubmit
-//    @Log(value = "保存耐压员工信息", module = LogModuleEnum.OTHER)
-//    public Result<?> saveWithstandEmployee(
-//            @RequestBody @Valid WithstandEmployeeForm form
-//    ) {
-//        boolean result = switchCabinetService.saveWithstandEmployee(form);
-//        return Result.judge(result);
-//    }
-//
-//    @Operation(summary = "分配功能员工信息")
-//    @PostMapping("/function-employee")
-//    @PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:assign')")
-//    @RepeatSubmit
-//    @Log(value = "保存功能员工信息", module = LogModuleEnum.OTHER)
-//    public Result<?> saveFunctionEmployee(
-//            @RequestBody @Valid FunctionEmployeeForm form
-//    ) {
-//        boolean result = switchCabinetService.saveFunctionEmployee(form);
-//        return Result.judge(result);
-//    }
-
-//    @Operation(summary = "获取仪表盘统计数据")
-//    @GetMapping("/dashboard/stats")
-//    @Log(value = "获取仪表盘统计数据", module = LogModuleEnum.OTHER)
-//    public Result<DashboardStatsVO> getDashboardStats() {
-//        DashboardStatsVO statsVO = switchCabinetService.getDashboardStats();
-//        return Result.success(statsVO);
-//    }
 }
