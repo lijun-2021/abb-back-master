@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "FQC开关柜数据展示")
 @RestController
-@RequestMapping("/api/v1/fqc/displays")
+@RequestMapping("/api/v1/fqc/display")
 @RequiredArgsConstructor
 public class DisplayController {
 

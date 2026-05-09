@@ -57,7 +57,7 @@ public class SwitchCabinetController {
 
     @Operation(summary = "新增开关柜")
     @PostMapping
-    //@PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:add')")
+    @PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:add')")
     @RepeatSubmit
     @Log(value = "新增开关柜", module = LogModuleEnum.OTHER)
     public Result<?> saveSwitchCabinet(
@@ -69,7 +69,7 @@ public class SwitchCabinetController {
 
     @Operation(summary = "开关柜指派员工")
     @PatchMapping("/{id}")
-   // @PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:edit')")
+    @PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:edit')")
     @Log(value = "开关柜指派员工", module = LogModuleEnum.OTHER)
     public Result<Void> updateSwitchCabinet(
             @Parameter(description = "主键ID") @PathVariable Long id,
@@ -81,7 +81,7 @@ public class SwitchCabinetController {
 
     @Operation(summary = "删除开关柜")
     @DeleteMapping("/{ids}")
-    //@PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:delete')")
+    @PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:delete')")
     @Log(value = "删除开关柜", module = LogModuleEnum.OTHER)
     public Result<Void> deleteSwitchCabinets(
             @Parameter(description = "主键ID，多个以英文逗号(,)分割") @PathVariable String ids
