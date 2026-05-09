@@ -8,8 +8,8 @@ import lombok.Getter;
 /**
  * 操作类型枚举
  *
- * @author YourName
- * @since 2024/XX/XX
+ * @author lijun
+ * @since 2026/04/23
  */
 @Schema(enumAsRef = true)
 @Getter

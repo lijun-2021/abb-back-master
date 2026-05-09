@@ -3,7 +3,6 @@ package com.youlai.boot.system.service.impl;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -224,73 +223,6 @@ public class SwitchCabinetServiceImpl extends ServiceImpl<SwitchCabinetMapper, S
             }
             existCabinet.setFunctionEmpName(null);
         }
-
-//        // 只要传入了功能员工姓名，就需要同步更新员工任务表
-//        if (newFunctionEmpName != null) {
-//            // 情况1：员工发生变化
-//            if (!newFunctionEmpName.equals(oldFunctionEmpName)) {
-//                // 1. 从旧员工任务中移除该SN号
-//                if (StrUtil.isNotBlank(oldFunctionEmpName)) {
-//                    EmployeeTask oldEmployee = employeeTaskMapper.selectOne(
-//                            new LambdaQueryWrapper<EmployeeTask>()
-//                                    .eq(EmployeeTask::getEmpName, oldFunctionEmpName)
-//                                    .eq(EmployeeTask::getTaskType, 2)
-//                                    .eq(EmployeeTask::getIsDeleted, 0)
-//                                    .last("LIMIT 1")
-//                    );
-//                    if (oldEmployee != null) {
-//                        employeeTaskService.removeSnCodeFromEmployee(
-//                                oldEmployee.getEmpId(), currentSnCode);
-//                    }
-//                }
-//
-//                // 2. 给新员工分配该SN号
-//                if (StrUtil.isNotBlank(newFunctionEmpName)) {
-//                    EmployeeTask newEmployee = employeeTaskMapper.selectOne(
-//                            new LambdaQueryWrapper<EmployeeTask>()
-//                                    .eq(EmployeeTask::getEmpName, newFunctionEmpName)
-//                                    .eq(EmployeeTask::getTaskType, 2)
-//                                    .eq(EmployeeTask::getIsDeleted, 0)
-//                                    .last("LIMIT 1")
-//                    );
-//                    if (newEmployee != null) {
-//                        employeeTaskService.assignSnCodeToEmployee(
-//                                newEmployee.getEmpId(), newFunctionEmpName, currentSnCode);
-//                    }
-//                }
-//            }
-//            // 情况2：员工没变，但这是首次指派（原来没有员工）
-//            else if (StrUtil.isBlank(oldFunctionEmpName) && StrUtil.isNotBlank(newFunctionEmpName)) {
-//                EmployeeTask employee = employeeTaskMapper.selectOne(
-//                        new LambdaQueryWrapper<EmployeeTask>()
-//                                .eq(EmployeeTask::getEmpName, newFunctionEmpName)
-//                                .eq(EmployeeTask::getTaskType, 2)
-//                                .eq(EmployeeTask::getIsDeleted, 0)
-//                                .last("LIMIT 1")
-//                );
-//                if (employee != null) {
-//                    employeeTaskService.assignSnCodeToEmployee(
-//                            employee.getEmpId(), newFunctionEmpName, currentSnCode);
-//                }
-//            }
-//
-//            existCabinet.setFunctionEmpName(newFunctionEmpName);
-//        }
-//        // 如果清空了功能员工，需要从任务表中移除
-//        else if (StrUtil.isNotBlank(oldFunctionEmpName) && newFunctionEmpName == null) {
-//            EmployeeTask oldEmployee = employeeTaskMapper.selectOne(
-//                    new LambdaQueryWrapper<EmployeeTask>()
-//                            .eq(EmployeeTask::getEmpName, oldFunctionEmpName)
-//                            .eq(EmployeeTask::getTaskType, 2)
-//                            .eq(EmployeeTask::getIsDeleted, 0)
-//                            .last("LIMIT 1")
-//            );
-//            if (oldEmployee != null) {
-//                employeeTaskService.removeSnCodeFromEmployee(
-//                        oldEmployee.getEmpId(), currentSnCode);
-//            }
-//            existCabinet.setFunctionEmpName(null);
-//        }
 
         if (StrUtil.isNotBlank(switchCabinetForm.getArea())) {
             existCabinet.setArea(switchCabinetForm.getArea());

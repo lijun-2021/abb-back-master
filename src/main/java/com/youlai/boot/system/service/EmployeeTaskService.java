@@ -34,31 +34,6 @@ public interface EmployeeTaskService extends IService<EmployeeTask> {
      * @param snCode   SN号
      */
     void assignSnCodeToEmployee(String empId, String empName, String snCode);
-//    /**
-//     * 新增员工任务
-//     *
-//     * @param employeeTaskForm 员工任务表单
-//     * @return 是否成功
-//     */
-//    boolean saveEmployeeTask(EmployeeTaskForm employeeTaskForm);
-//
-//    /**
-//     * 修改员工任务
-//     *
-//     * @param id               主键ID
-//     * @param employeeTaskForm 员工任务表单
-//     * @return 是否成功
-//     */
-//    boolean updateEmployeeTask(Long id, EmployeeTaskForm employeeTaskForm);
-//
-//    /**
-//     * 删除员工任务
-//     *
-//     * @param ids 主键ID，多个以英文逗号(,)分割
-//     * @return 是否成功
-//     */
-//    boolean deleteEmployeeTasks(String ids);
-
 
     /**
      * 从员工任务中移除SN号
