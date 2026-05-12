@@ -112,4 +112,9 @@ public class AuthController {
         return Result.success(authenticationToken);
     }
 
+    @GetMapping("/health/ping")
+    public String ping() {
+        return "ok";
+    }
+
 }
