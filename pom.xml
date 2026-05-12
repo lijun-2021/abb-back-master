@@ -285,6 +285,8 @@
     </dependencies>
 
     <build>
+        <!-- 自定义 jar 包名称 -->
+        <finalName>abb-back</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
