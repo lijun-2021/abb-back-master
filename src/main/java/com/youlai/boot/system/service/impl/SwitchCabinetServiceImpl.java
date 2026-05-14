@@ -3,6 +3,7 @@ package com.youlai.boot.system.service.impl;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -177,23 +178,43 @@ public class SwitchCabinetServiceImpl extends ServiceImpl<SwitchCabinetMapper, S
         String newFunctionEmpName = switchCabinetForm.getFunctionEmpName();
         String newSnCode = existCabinet.getSnCode();
 
-        if (newFunctionEmpName != null) {
+        log.info("更新开关柜: oldFunctionEmpName={}, newFunctionEmpName={}, snCode={}",
+                oldFunctionEmpName, newFunctionEmpName, newSnCode);
+
+        // 处理functionEmpName的变化
+        if (StrUtil.isNotBlank(newFunctionEmpName)) {
+            // 新值不为空
             if (!newFunctionEmpName.equals(oldFunctionEmpName)) {
-                if (StrUtil.isNotBlank(newFunctionEmpName)) {
-                    EmployeeTask newEmployee = employeeTaskMapper.selectOne(
+                // 员工发生变化
+                if (StrUtil.isNotBlank(oldFunctionEmpName)) {
+                    // 从旧员工移除
+                    EmployeeTask oldEmployee = employeeTaskMapper.selectOne(
                             new LambdaQueryWrapper<EmployeeTask>()
-                                    .eq(EmployeeTask::getEmpName, newFunctionEmpName)
+                                    .eq(EmployeeTask::getEmpName, oldFunctionEmpName)
                                     .eq(EmployeeTask::getTaskType, 2)
                                     .eq(EmployeeTask::getIsDeleted, 0)
                                     .last("LIMIT 1")
                     );
-                    if (newEmployee != null) {
-                        employeeTaskService.assignSnCodeToEmployee(
-                                newEmployee.getEmpId(), newFunctionEmpName, newSnCode);
+                    if (oldEmployee != null) {
+                        employeeTaskService.removeSnCodeFromEmployee(
+                                oldEmployee.getEmpId(), newSnCode);
+                        log.info("重新指派：已从旧员工 {} 移除SN号 {}", oldFunctionEmpName, newSnCode);
                     }
                 }
+                // 添加到新员工
+                EmployeeTask newEmployee = employeeTaskMapper.selectOne(
+                        new LambdaQueryWrapper<EmployeeTask>()
+                                .eq(EmployeeTask::getEmpName, newFunctionEmpName)
+                                .eq(EmployeeTask::getTaskType, 2)
+                                .eq(EmployeeTask::getIsDeleted, 0)
+                                .last("LIMIT 1")
+                );
+                // 校验：如果任务列表中不存在该员工，则中断操作并提示
+                Assert.notNull(newEmployee, "员工任务列表中不存在该员工: " + newFunctionEmpName);
+                employeeTaskService.assignSnCodeToEmployee(newEmployee.getEmpId(), newFunctionEmpName, newSnCode);
             }
             else if (StrUtil.isBlank(oldFunctionEmpName) && StrUtil.isNotBlank(newFunctionEmpName)) {
+                // 从无到有
                 EmployeeTask employee = employeeTaskMapper.selectOne(
                         new LambdaQueryWrapper<EmployeeTask>()
                                 .eq(EmployeeTask::getEmpName, newFunctionEmpName)
@@ -201,34 +222,53 @@ public class SwitchCabinetServiceImpl extends ServiceImpl<SwitchCabinetMapper, S
                                 .eq(EmployeeTask::getIsDeleted, 0)
                                 .last("LIMIT 1")
                 );
-                if (employee != null) {
-                    employeeTaskService.assignSnCodeToEmployee(
-                            employee.getEmpId(), newFunctionEmpName, newSnCode);
-                }
+                // 校验：如果任务列表中不存在该员工，则中断操作并提示
+                Assert.notNull(employee, "员工任务列表中不存在该员工: " + newFunctionEmpName);
+                employeeTaskService.assignSnCodeToEmployee(employee.getEmpId(), newFunctionEmpName, newSnCode);
             }
-
             existCabinet.setFunctionEmpName(newFunctionEmpName);
         }
-        else if (StrUtil.isNotBlank(oldFunctionEmpName) && newFunctionEmpName == null) {
-            EmployeeTask oldEmployee = employeeTaskMapper.selectOne(
-                    new LambdaQueryWrapper<EmployeeTask>()
-                            .eq(EmployeeTask::getEmpName, oldFunctionEmpName)
-                            .eq(EmployeeTask::getTaskType, 2)
-                            .eq(EmployeeTask::getIsDeleted, 0)
-                            .last("LIMIT 1")
-            );
-            if (oldEmployee != null) {
-                employeeTaskService.removeSnCodeFromEmployee(
-                        oldEmployee.getEmpId(), newSnCode);
+        else {
+            // 新值为空（null或空字符串）
+            if (StrUtil.isNotBlank(oldFunctionEmpName)) {
+                // 从有到无，需要移除员工任务
+                log.info("检测到functionEmpName被清空，准备从员工 {} 移除SN号: {}", oldFunctionEmpName, newSnCode);
+                EmployeeTask oldEmployee = employeeTaskMapper.selectOne(
+                        new LambdaQueryWrapper<EmployeeTask>()
+                                .eq(EmployeeTask::getEmpName, oldFunctionEmpName)
+                                .eq(EmployeeTask::getTaskType, 2)
+                                .eq(EmployeeTask::getIsDeleted, 0)
+                                .last("LIMIT 1")
+                );
+                if (oldEmployee != null) {
+                    employeeTaskService.removeSnCodeFromEmployee(
+                            oldEmployee.getEmpId(), newSnCode);
+                    log.info("已从员工 {} (ID:{}) 成功移除SN号: {}", oldFunctionEmpName, oldEmployee.getEmpId(), newSnCode);
+                } else {
+                    log.warn("未找到员工 {} 的任务记录，无法移除SN号: {}", oldFunctionEmpName, newSnCode);
+                }
+                existCabinet.setFunctionEmpName(null);
+                log.info("已将开关柜 {} 的 functionEmpName 设置为 null", newSnCode);
             }
-            existCabinet.setFunctionEmpName(null);
         }
 
         if (StrUtil.isNotBlank(switchCabinetForm.getArea())) {
             existCabinet.setArea(switchCabinetForm.getArea());
         }
 
-        return this.updateById(existCabinet);
+        log.info("最终更新开关柜记录: id={}, snCode={}, functionEmpName={}",
+                id, existCabinet.getSnCode(), existCabinet.getFunctionEmpName());
+
+        // 使用 LambdaUpdateWrapper 显式更新所有字段，包括 null 值
+        return this.update(null, new LambdaUpdateWrapper<SwitchCabinet>()
+                .eq(SwitchCabinet::getId, id)
+                .set(SwitchCabinet::getSnCode, existCabinet.getSnCode())
+                .set(SwitchCabinet::getProductionLine, existCabinet.getProductionLine())
+                .set(SwitchCabinet::getOfflineTime, existCabinet.getOfflineTime())
+                .set(SwitchCabinet::getFunctionStarttime, existCabinet.getFunctionStarttime())
+                .set(SwitchCabinet::getFunctionEndtime, existCabinet.getFunctionEndtime())
+                .set(SwitchCabinet::getFunctionEmpName, existCabinet.getFunctionEmpName())
+                .set(SwitchCabinet::getArea, existCabinet.getArea()));
     }
 
     /**
