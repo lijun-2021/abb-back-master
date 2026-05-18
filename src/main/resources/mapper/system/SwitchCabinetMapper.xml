@@ -18,9 +18,17 @@
         sc.create_time AS createTime,
         sc.update_time AS updateTime,
         cd.sn_h_code AS snHCode,
+        NULLIF(cd.h_ncr_discription1, '') AS hNcrDiscription1,
+        NULLIF(cd.h_ncr_discription2, '') AS hNcrDiscription2,
+        NULLIF(cd.h_ncr_discription3, '') AS hNcrDiscription3,
+        NULLIF(cd.h_ncr_discription4, '') AS hNcrDiscription4,
+        NULLIF(cd.h_ncr_discription5, '') AS hNcrDiscription5,
         cd.sn_l_code AS snLCode,
-        cd.h_ncr_discription AS hNcrDiscription,
-        cd.l_ncr_discription AS lNcrDiscription
+        NULLIF(cd.l_ncr_discription1, '') AS lNcrDiscription1,
+        NULLIF(cd.l_ncr_discription2, '') AS lNcrDiscription2,
+        NULLIF(cd.l_ncr_discription3, '') AS lNcrDiscription3,
+        NULLIF(cd.l_ncr_discription4, '') AS lNcrDiscription4,
+        NULLIF(cd.l_ncr_discription5, '') AS lNcrDiscription5
         FROM
         fqc_switch_cabinet sc
         LEFT JOIN fqc_cabinet_detail cd ON sc.sn_code = cd.sn_code AND cd.is_deleted = 0

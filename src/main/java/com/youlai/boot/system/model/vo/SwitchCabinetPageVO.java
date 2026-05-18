@@ -2,6 +2,7 @@ package com.youlai.boot.system.model.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -55,14 +56,48 @@ public class SwitchCabinetPageVO implements Serializable {
     @Schema(description = "高压柜SN号")
     private String snHCode;
 
+    @JsonProperty("hNcrDiscription1")
+    @Schema(description = "高压柜NCR描述1")
+    private String hNcrDiscription1;
+
+    @JsonProperty("hNcrDiscription2")
+    @Schema(description = "高压柜NCR描述2")
+    private String hNcrDiscription2;
+
+    @JsonProperty("hNcrDiscription3")
+    @Schema(description = "高压柜NCR描述3")
+    private String hNcrDiscription3;
+
+    @JsonProperty("hNcrDiscription4")
+    @Schema(description = "高压柜NCR描述4")
+    private String hNcrDiscription4;
+
+    @JsonProperty("hNcrDiscription5")
+    @Schema(description = "高压柜NCR描述5")
+    private String hNcrDiscription5;
+
     @Schema(description = "低压柜SN号")
     private String snLCode;
 
-    @Schema(description = "高压柜NCR描述")
-    private String hNcrDiscription;
+    @JsonProperty("lNcrDiscription1")
+    @Schema(description = "低压柜NCR描述1")
+    private String lNcrDiscription1;
 
-    @Schema(description = "低压柜NCR描述")
-    private String lNcrDiscription;
+    @JsonProperty("lNcrDiscription2")
+    @Schema(description = "低压柜NCR描述2")
+    private String lNcrDiscription2;
+
+    @JsonProperty("lNcrDiscription3")
+    @Schema(description = "低压柜NCR描述3")
+    private String lNcrDiscription3;
+
+    @JsonProperty("lNcrDiscription4")
+    @Schema(description = "低压柜NCR描述4")
+    private String lNcrDiscription4;
+
+    @JsonProperty("lNcrDiscription5")
+    @Schema(description = "低压柜NCR描述5")
+    private String lNcrDiscription5;
 
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
