@@ -33,14 +33,21 @@ CREATE TABLE `fqc_display` (
 -- ----------------------------
 -- Table structure for fqc_cabinet_detail
 -- ----------------------------
-DROP TABLE IF EXISTS `fqc_cabinet_detail`;
 CREATE TABLE `fqc_cabinet_detail` (
                                       `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                                       `sn_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '开关柜SN号',
                                       `sn_h_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '高压柜SN号',
-                                      `h_ncr_discription` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '高压柜NCR描述',
+                                      `h_ncr_discription1` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '高压柜NCR描述1',
+                                      `h_ncr_discription2` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '高压柜NCR描述2',
+                                      `h_ncr_discription3` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '高压柜NCR描述3',
+                                      `h_ncr_discription4` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '高压柜NCR描述4',
+                                      `h_ncr_discription5` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '高压柜NCR描述5',
                                       `sn_l_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '低压柜SN号',
-                                      `l_ncr_discription` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '低压柜NCR描述',
+                                      `l_ncr_discription1` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '低压柜NCR描述1',
+                                      `l_ncr_discription2` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '低压柜NCR描述2',
+                                      `l_ncr_discription3` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '低压柜NCR描述3',
+                                      `l_ncr_discription4` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '低压柜NCR描述4',
+                                      `l_ncr_discription5` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '低压柜NCR描述5',
                                       `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                       `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                                       `is_deleted` tinyint DEFAULT '0' COMMENT '0-未删除 1-已删除',
