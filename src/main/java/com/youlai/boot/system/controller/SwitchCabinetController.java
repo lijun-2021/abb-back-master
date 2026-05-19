@@ -45,39 +45,39 @@ public class SwitchCabinetController {
         return PageResult.success(result);
     }
 
-    @Operation(summary = "新增开关柜")
-    @PostMapping
-    @PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:add')")
-    @RepeatSubmit
-    @Log(value = "新增开关柜", module = LogModuleEnum.OTHER)
-    public Result<?> saveSwitchCabinet(
-            @RequestBody @Valid SwitchCabinetForm switchCabinetForm
-    ) {
-        boolean result = switchCabinetService.saveSwitchCabinet(switchCabinetForm);
-        return Result.judge(result);
-    }
-
     @Operation(summary = "开关柜指派员工")
-    @PatchMapping("/{id}")
+    @PatchMapping("/batch-update")
     @PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:edit')")
     @Log(value = "开关柜指派员工", module = LogModuleEnum.OTHER)
-    public Result<Void> updateSwitchCabinet(
-            @Parameter(description = "主键ID") @PathVariable Long id,
-            @RequestBody @Valid SwitchCabinetForm switchCabinetForm
+    public Result<Void> updateSwitchCabinets(
+            @RequestBody @Valid SwitchCabinetForm batchForm
     ) {
-        boolean result = switchCabinetService.updateSwitchCabinet(id, switchCabinetForm);
+        boolean result = switchCabinetService.updateSwitchCabinets(batchForm);
         return Result.judge(result);
     }
 
-    @Operation(summary = "删除开关柜")
-    @DeleteMapping("/{ids}")
-    @PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:delete')")
-    @Log(value = "删除开关柜", module = LogModuleEnum.OTHER)
-    public Result<Void> deleteSwitchCabinets(
-            @Parameter(description = "主键ID，多个以英文逗号(,)分割") @PathVariable String ids
-    ) {
-        boolean result = switchCabinetService.deleteSwitchCabinets(ids);
-        return Result.judge(result);
-    }
+
+//    @Operation(summary = "新增开关柜")
+//    @PostMapping
+//    //@PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:add')")
+//    @RepeatSubmit
+//    @Log(value = "新增开关柜", module = LogModuleEnum.OTHER)
+//    public Result<?> saveSwitchCabinet(
+//            @RequestBody @Valid SwitchCabinetForm switchCabinetForm
+//    ) {
+//        boolean result = switchCabinetService.saveSwitchCabinet(switchCabinetForm);
+//        return Result.judge(result);
+//    }
+
+//    @Operation(summary = "删除开关柜")
+//    @DeleteMapping("/{ids}")
+//    //@PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:delete')")
+//    @Log(value = "删除开关柜", module = LogModuleEnum.OTHER)
+//    public Result<Void> deleteSwitchCabinets(
+//            @Parameter(description = "主键ID，多个以英文逗号(,)分割") @PathVariable String ids
+//    ) {
+//        boolean result = switchCabinetService.deleteSwitchCabinets(ids);
+//        return Result.judge(result);
+//    }
 
 }

@@ -83,111 +83,69 @@ public class SwitchCabinetServiceImpl extends ServiceImpl<SwitchCabinetMapper, S
 
 
     /**
-     * 新增开关柜
-     *
-     * @param switchCabinetForm 开关柜表单
-     * @return 是否成功
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean saveSwitchCabinet(SwitchCabinetForm switchCabinetForm) {
-        String snCode = switchCabinetForm.getSnCode();
-
-        long count = this.count(new LambdaQueryWrapper<SwitchCabinet>()
-                .eq(SwitchCabinet::getSnCode, snCode)
-                .eq(SwitchCabinet::getIsDeleted, 0)
-        );
-        Assert.isTrue(count == 0, "SN号已存在");
-
-        SwitchCabinet entity = switchCabinetConverter.toEntity(switchCabinetForm);
-
-        if (StrUtil.isNotBlank(switchCabinetForm.getOfflineTime())) {
-            try {
-                entity.setOfflineTime(LocalDateTime.parse(
-                    switchCabinetForm.getOfflineTime(),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            } catch (Exception e) {
-                log.error("下线时间格式错误: {}", switchCabinetForm.getOfflineTime(), e);
-                throw new IllegalArgumentException("下线时间格式错误，正确格式：yyyy-MM-dd HH:mm:ss");
-            }
-        }
-
-        return this.save(entity);
-    }
-
-    /**
      * 开关柜指派员工
      *
-     * @param id                主键ID
-     * @param switchCabinetForm 开关柜表单
+     * @param batchForm 开关柜表单
      * @return 是否成功
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateSwitchCabinet(Long id, SwitchCabinetForm switchCabinetForm) {
-        SwitchCabinet existCabinet = this.getById(id);
-        Assert.notNull(existCabinet, "开关柜不存在");
+    public boolean updateSwitchCabinets(SwitchCabinetForm batchForm) {
+        List<Long> ids = batchForm.getIds();
+        List<String> empNames = batchForm.getFunctionEmpNames();
+        List<String> areas = batchForm.getAreas();
 
-        if (StrUtil.isNotBlank(switchCabinetForm.getSnCode())) {
-            long count = this.count(new LambdaQueryWrapper<SwitchCabinet>()
-                    .ne(SwitchCabinet::getId, id)
-                    .eq(SwitchCabinet::getSnCode, switchCabinetForm.getSnCode())
-                    .eq(SwitchCabinet::getIsDeleted, 0));
-            Assert.isTrue(count == 0, "SN号已存在");
-            existCabinet.setSnCode(switchCabinetForm.getSnCode());
-        }
+        Assert.isTrue(ids.size() == empNames.size(), "开关柜ID列表与员工姓名列表长度不一致");
+        Assert.isTrue(ids.size() == areas.size(), "开关柜ID列表与区域列表长度不一致");
 
-        if (StrUtil.isNotBlank(switchCabinetForm.getProductionLine())) {
-            existCabinet.setProductionLine(switchCabinetForm.getProductionLine());
-        }
+        log.info("批量处理开关柜，总数: {}", ids.size());
 
-        if (StrUtil.isNotBlank(switchCabinetForm.getOfflineTime())) {
-            try {
-                existCabinet.setOfflineTime(LocalDateTime.parse(
-                        switchCabinetForm.getOfflineTime(),
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            } catch (Exception e) {
-                log.error("下线时间格式错误: {}", switchCabinetForm.getOfflineTime(), e);
-                throw new IllegalArgumentException("下线时间格式错误，正确格式：yyyy-MM-dd HH:mm:ss");
-            }
-        }
+        for (int i = 0; i < ids.size(); i++) {
+            Long cabinetId = ids.get(i);
+            String newEmpName = empNames.get(i);
+            String newArea = areas.get(i);
 
-        if (StrUtil.isNotBlank(switchCabinetForm.getFunctionStarttime())) {
-            try {
-                existCabinet.setFunctionStarttime(LocalDateTime.parse(
-                        switchCabinetForm.getFunctionStarttime(),
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            } catch (Exception e) {
-                log.error("功能开始时间格式错误: {}", switchCabinetForm.getFunctionStarttime(), e);
-                throw new IllegalArgumentException("功能开始时间格式错误，正确格式：yyyy-MM-dd HH:mm:ss");
-            }
-        }
+            SwitchCabinet existCabinet = this.getById(cabinetId);
+            Assert.notNull(existCabinet, "开关柜不存在，ID: " + cabinetId);
 
-        if (StrUtil.isNotBlank(switchCabinetForm.getFunctionEndtime())) {
-            try {
-                existCabinet.setFunctionEndtime(LocalDateTime.parse(
-                        switchCabinetForm.getFunctionEndtime(),
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            } catch (Exception e) {
-                log.error("功能结束时间格式错误: {}", switchCabinetForm.getFunctionEndtime(), e);
-                throw new IllegalArgumentException("功能结束时间格式错误，正确格式：yyyy-MM-dd HH:mm:ss");
-            }
-        }
+            String oldFunctionEmpName = existCabinet.getFunctionEmpName();
+            String snCode = existCabinet.getSnCode();
 
-        String oldFunctionEmpName = existCabinet.getFunctionEmpName();
-        String newFunctionEmpName = switchCabinetForm.getFunctionEmpName();
-        String newSnCode = existCabinet.getSnCode();
+            log.info("处理开关柜 ID: {}, SN: {}, 旧员工: {}, 新员工: {}",
+                    cabinetId, snCode, oldFunctionEmpName, newEmpName);
 
-        log.info("更新开关柜: oldFunctionEmpName={}, newFunctionEmpName={}, snCode={}",
-                oldFunctionEmpName, newFunctionEmpName, newSnCode);
+            if (StrUtil.isNotBlank(newEmpName)) {
+                if (!newEmpName.equals(oldFunctionEmpName)) {
+                    if (StrUtil.isNotBlank(oldFunctionEmpName)) {
+                        EmployeeTask oldEmployee = employeeTaskMapper.selectOne(
+                                new LambdaQueryWrapper<EmployeeTask>()
+                                        .eq(EmployeeTask::getEmpName, oldFunctionEmpName)
+                                        .eq(EmployeeTask::getTaskType, 2)
+                                        .eq(EmployeeTask::getIsDeleted, 0)
+                                        .last("LIMIT 1")
+                        );
+                        if (oldEmployee != null) {
+                            employeeTaskService.removeSnCodeFromEmployee(oldEmployee.getEmpId(), snCode);
+                            log.info("已从旧员工 {} 移除SN号 {}", oldFunctionEmpName, snCode);
+                        }
+                    }
 
-        // 处理functionEmpName的变化
-        if (StrUtil.isNotBlank(newFunctionEmpName)) {
-            // 新值不为空
-            if (!newFunctionEmpName.equals(oldFunctionEmpName)) {
-                // 员工发生变化
+                    EmployeeTask newEmployee = employeeTaskMapper.selectOne(
+                            new LambdaQueryWrapper<EmployeeTask>()
+                                    .eq(EmployeeTask::getEmpName, newEmpName)
+                                    .eq(EmployeeTask::getTaskType, 2)
+                                    .eq(EmployeeTask::getIsDeleted, 0)
+                                    .last("LIMIT 1")
+                    );
+                    Assert.notNull(newEmployee, "员工任务列表中不存在该员工: " + newEmpName);
+                    employeeTaskService.assignSnCodeToEmployee(newEmployee.getEmpId(), newEmpName, snCode);
+                    log.info("已为员工 {} 分配SN号 {}", newEmpName, snCode);
+
+                    existCabinet.setFunctionEmpName(newEmpName);
+                }
+            } else {
                 if (StrUtil.isNotBlank(oldFunctionEmpName)) {
-                    // 从旧员工移除
+                    log.info("检测到functionEmpName为null或空，准备从员工 {} 移除SN号: {}", oldFunctionEmpName, snCode);
                     EmployeeTask oldEmployee = employeeTaskMapper.selectOne(
                             new LambdaQueryWrapper<EmployeeTask>()
                                     .eq(EmployeeTask::getEmpName, oldFunctionEmpName)
@@ -196,109 +154,98 @@ public class SwitchCabinetServiceImpl extends ServiceImpl<SwitchCabinetMapper, S
                                     .last("LIMIT 1")
                     );
                     if (oldEmployee != null) {
-                        employeeTaskService.removeSnCodeFromEmployee(
-                                oldEmployee.getEmpId(), newSnCode);
-                        log.info("重新指派：已从旧员工 {} 移除SN号 {}", oldFunctionEmpName, newSnCode);
+                        employeeTaskService.removeSnCodeFromEmployee(oldEmployee.getEmpId(), snCode);
+                        log.info("已从员工 {} (ID:{}) 成功移除SN号: {}", oldFunctionEmpName, oldEmployee.getEmpId(), snCode);
+                    } else {
+                        log.warn("未找到员工 {} 的任务记录，无法移除SN号: {}", oldFunctionEmpName, snCode);
                     }
+                    existCabinet.setFunctionEmpName(null);
+                    log.info("已将开关柜 {} 的 functionEmpName 设置为 null", snCode);
                 }
-                // 添加到新员工
-                EmployeeTask newEmployee = employeeTaskMapper.selectOne(
-                        new LambdaQueryWrapper<EmployeeTask>()
-                                .eq(EmployeeTask::getEmpName, newFunctionEmpName)
-                                .eq(EmployeeTask::getTaskType, 2)
-                                .eq(EmployeeTask::getIsDeleted, 0)
-                                .last("LIMIT 1")
-                );
-                // 校验：如果任务列表中不存在该员工，则中断操作并提示
-                Assert.notNull(newEmployee, "员工任务列表中不存在该员工: " + newFunctionEmpName);
-                employeeTaskService.assignSnCodeToEmployee(newEmployee.getEmpId(), newFunctionEmpName, newSnCode);
             }
-            else if (StrUtil.isBlank(oldFunctionEmpName) && StrUtil.isNotBlank(newFunctionEmpName)) {
-                // 从无到有
-                EmployeeTask employee = employeeTaskMapper.selectOne(
-                        new LambdaQueryWrapper<EmployeeTask>()
-                                .eq(EmployeeTask::getEmpName, newFunctionEmpName)
-                                .eq(EmployeeTask::getTaskType, 2)
-                                .eq(EmployeeTask::getIsDeleted, 0)
-                                .last("LIMIT 1")
-                );
-                // 校验：如果任务列表中不存在该员工，则中断操作并提示
-                Assert.notNull(employee, "员工任务列表中不存在该员工: " + newFunctionEmpName);
-                employeeTaskService.assignSnCodeToEmployee(employee.getEmpId(), newFunctionEmpName, newSnCode);
+
+            if (newArea != null) {
+                existCabinet.setArea(newArea);
             }
-            existCabinet.setFunctionEmpName(newFunctionEmpName);
-        }
-        else {
-            // 新值为空（null或空字符串）
-            if (StrUtil.isNotBlank(oldFunctionEmpName)) {
-                // 从有到无，需要移除员工任务
-                log.info("检测到functionEmpName被清空，准备从员工 {} 移除SN号: {}", oldFunctionEmpName, newSnCode);
-                EmployeeTask oldEmployee = employeeTaskMapper.selectOne(
-                        new LambdaQueryWrapper<EmployeeTask>()
-                                .eq(EmployeeTask::getEmpName, oldFunctionEmpName)
-                                .eq(EmployeeTask::getTaskType, 2)
-                                .eq(EmployeeTask::getIsDeleted, 0)
-                                .last("LIMIT 1")
-                );
-                if (oldEmployee != null) {
-                    employeeTaskService.removeSnCodeFromEmployee(
-                            oldEmployee.getEmpId(), newSnCode);
-                    log.info("已从员工 {} (ID:{}) 成功移除SN号: {}", oldFunctionEmpName, oldEmployee.getEmpId(), newSnCode);
-                } else {
-                    log.warn("未找到员工 {} 的任务记录，无法移除SN号: {}", oldFunctionEmpName, newSnCode);
-                }
-                existCabinet.setFunctionEmpName(null);
-                log.info("已将开关柜 {} 的 functionEmpName 设置为 null", newSnCode);
-            }
+
+            boolean updated = this.update(null, new LambdaUpdateWrapper<SwitchCabinet>()
+                    .eq(SwitchCabinet::getId, cabinetId)
+                    .set(SwitchCabinet::getFunctionEmpName, existCabinet.getFunctionEmpName())
+                    .set(SwitchCabinet::getArea, existCabinet.getArea()));
+
+            log.info("更新开关柜成功，ID: {}, SN: {}, 员工: {}, 区域: {}",
+                    cabinetId, snCode, existCabinet.getFunctionEmpName(), existCabinet.getArea());
         }
 
-        if (StrUtil.isNotBlank(switchCabinetForm.getArea())) {
-            existCabinet.setArea(switchCabinetForm.getArea());
-        }
-
-        log.info("最终更新开关柜记录: id={}, snCode={}, functionEmpName={}",
-                id, existCabinet.getSnCode(), existCabinet.getFunctionEmpName());
-
-        // 使用 LambdaUpdateWrapper 显式更新所有字段，包括 null 值
-        return this.update(null, new LambdaUpdateWrapper<SwitchCabinet>()
-                .eq(SwitchCabinet::getId, id)
-                .set(SwitchCabinet::getSnCode, existCabinet.getSnCode())
-                .set(SwitchCabinet::getProductionLine, existCabinet.getProductionLine())
-                .set(SwitchCabinet::getOfflineTime, existCabinet.getOfflineTime())
-                .set(SwitchCabinet::getFunctionStarttime, existCabinet.getFunctionStarttime())
-                .set(SwitchCabinet::getFunctionEndtime, existCabinet.getFunctionEndtime())
-                .set(SwitchCabinet::getFunctionEmpName, existCabinet.getFunctionEmpName())
-                .set(SwitchCabinet::getArea, existCabinet.getArea()));
-    }
-
-    /**
-     * 删除开关柜
-     *
-     * @param ids 主键ID，多个以英文逗号(,)分割
-     * @return 是否成功
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean deleteSwitchCabinets(String ids) {
-        Assert.isTrue(StrUtil.isNotBlank(ids), "删除的开关柜数据为空");
-
-        List<Long> idList = Arrays.stream(ids.split(","))
-                .map(Long::parseLong)
-                .collect(Collectors.toList());
-
-        long count = this.count(new LambdaQueryWrapper<SwitchCabinet>()
-                .in(SwitchCabinet::getId, idList)
-                .eq(SwitchCabinet::getIsDeleted, 0)
-        );
-
-        Assert.isTrue(count > 0, "开关柜不存在或已被删除");
-
-        boolean result = this.removeByIds(idList);
-
-        if (result) {
-            log.info("删除开关柜成功，IDs: {}", ids);
-        }
-
-        return result;
+        return true;
     }
 }
+
+
+
+//
+//    /**
+//     * 新增开关柜
+//     *
+//     * @param switchCabinetForm 开关柜表单
+//     * @return 是否成功
+//     */
+//    @Override
+//    @Transactional(rollbackFor = Exception.class)
+//    public boolean saveSwitchCabinet(SwitchCabinetForm switchCabinetForm) {
+//        String snCode = switchCabinetForm.getSnCode();
+//
+//        long count = this.count(new LambdaQueryWrapper<SwitchCabinet>()
+//                .eq(SwitchCabinet::getSnCode, snCode)
+//                .eq(SwitchCabinet::getIsDeleted, 0)
+//        );
+//        Assert.isTrue(count == 0, "SN号已存在");
+//
+//        SwitchCabinet entity = switchCabinetConverter.toEntity(switchCabinetForm);
+//
+//        if (StrUtil.isNotBlank(switchCabinetForm.getOfflineTime())) {
+//            try {
+//                entity.setOfflineTime(LocalDateTime.parse(
+//                    switchCabinetForm.getOfflineTime(),
+//                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+//            } catch (Exception e) {
+//                log.error("下线时间格式错误: {}", switchCabinetForm.getOfflineTime(), e);
+//                throw new IllegalArgumentException("下线时间格式错误，正确格式：yyyy-MM-dd HH:mm:ss");
+//            }
+//        }
+//
+//        return this.save(entity);
+//    }
+
+
+
+//**
+// //     * 删除开关柜
+// //     *
+// //     * @param ids 主键ID，多个以英文逗号(,)分割
+// //     * @return 是否成功
+// //     */
+//    @Override
+//    @Transactional(rollbackFor = Exception.class)
+//    public boolean deleteSwitchCabinets(String ids) {
+//        Assert.isTrue(StrUtil.isNotBlank(ids), "删除的开关柜数据为空");
+//
+//        List<Long> idList = Arrays.stream(ids.split(","))
+//                .map(Long::parseLong)
+//                .collect(Collectors.toList());
+//
+//        long count = this.count(new LambdaQueryWrapper<SwitchCabinet>()
+//                .in(SwitchCabinet::getId, idList)
+//                .eq(SwitchCabinet::getIsDeleted, 0)
+//        );
+//
+//        Assert.isTrue(count > 0, "开关柜不存在或已被删除");
+//
+//        boolean result = this.removeByIds(idList);
+//
+//        if (result) {
+//            log.info("删除开关柜成功，IDs: {}", ids);
+//        }
+//
+//        return result;
+//    }

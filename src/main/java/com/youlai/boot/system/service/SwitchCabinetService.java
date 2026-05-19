@@ -24,27 +24,25 @@ public interface SwitchCabinetService extends IService<SwitchCabinet> {
     IPage<SwitchCabinetPageVO> getSwitchCabinetPage(SwitchCabinetPageQuery queryParams);
 
     /**
-     * 新增开关柜
-     *
-     * @param switchCabinetForm 开关柜表单
-     * @return 是否成功
-     */
-    boolean saveSwitchCabinet(SwitchCabinetForm switchCabinetForm);
-
-    /**
      * 开关柜员工指派
-     *
-     * @param id                  主键ID
-     * @param switchCabinetForm   开关柜表单
+     * @param batchForm   开关柜表单
      * @return 是否成功
      */
-    boolean updateSwitchCabinet(Long id, SwitchCabinetForm switchCabinetForm);
+    boolean updateSwitchCabinets(SwitchCabinetForm batchForm);
 
-    /**
-     * 删除开关柜
-     *
-     * @param ids 主键ID，多个以英文逗号(,)分割
-     * @return 是否成功
-     */
-    boolean deleteSwitchCabinets(String ids);
+//    /**
+//     * 删除开关柜
+//     *
+//     * @param ids 主键ID，多个以英文逗号(,)分割
+//     * @return 是否成功
+//     */
+//    boolean deleteSwitchCabinets(String ids);
+
+//    /**
+//     * 新增开关柜
+//     *
+//     * @param switchCabinetForm 开关柜表单
+//     * @return 是否成功
+//     */
+//    boolean saveSwitchCabinet(SwitchCabinetForm switchCabinetForm);
 }

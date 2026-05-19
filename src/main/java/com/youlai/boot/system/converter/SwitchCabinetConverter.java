@@ -27,40 +27,40 @@ public interface SwitchCabinetConverter {
      */
     Page<SwitchCabinetPageVO> toPageVo(Page<SwitchCabinet> entity);
 
-    /**
-     * Form转Entity
-     */
-    @Mapping(target = "offlineTime", expression = "java(parseDateTime(form.getOfflineTime()))")
-    SwitchCabinet toEntity(SwitchCabinetForm form);
+//    /**
+//     * Form转Entity
+//     */
+//    @Mapping(target = "offlineTime", expression = "java(parseDateTime(form.getOfflineTime()))")
+//    SwitchCabinet toEntity(SwitchCabinetForm form);
 
-    /**
-     * Entity转Form
-     */
-    @InheritInverseConfiguration(name = "toEntity")
-    @Mapping(target = "offlineTime", expression = "java(formatDateTime(entity.getOfflineTime()))")
-    SwitchCabinetForm toForm(SwitchCabinet entity);
-
-    /**
-     * 字符串转LocalDateTime
-     */
-    default LocalDateTime parseDateTime(String timeStr) {
-        if (timeStr == null || timeStr.isEmpty()) {
-            return null;
-        }
-        try {
-            return LocalDateTime.parse(timeStr, DATE_TIME_FORMATTER);
-        } catch (Exception e) {
-            throw new RuntimeException("时间格式错误，请使用 yyyy-MM-dd HH:mm:ss", e);
-        }
-    }
-
-    /**
-     * LocalDateTime转字符串
-     */
-    default String formatDateTime(LocalDateTime dateTime) {
-        if (dateTime == null) {
-            return null;
-        }
-        return dateTime.format(DATE_TIME_FORMATTER);
-    }
+//    /**
+//     * Entity转Form
+//     */
+//    @InheritInverseConfiguration(name = "toEntity")
+//    @Mapping(target = "offlineTime", expression = "java(formatDateTime(entity.getOfflineTime()))")
+//    SwitchCabinetForm toForm(SwitchCabinet entity);
+//
+//    /**
+//     * 字符串转LocalDateTime
+//     */
+//    default LocalDateTime parseDateTime(String timeStr) {
+//        if (timeStr == null || timeStr.isEmpty()) {
+//            return null;
+//        }
+//        try {
+//            return LocalDateTime.parse(timeStr, DATE_TIME_FORMATTER);
+//        } catch (Exception e) {
+//            throw new RuntimeException("时间格式错误，请使用 yyyy-MM-dd HH:mm:ss", e);
+//        }
+//    }
+//
+//    /**
+//     * LocalDateTime转字符串
+//     */
+//    default String formatDateTime(LocalDateTime dateTime) {
+//        if (dateTime == null) {
+//            return null;
+//        }
+//        return dateTime.format(DATE_TIME_FORMATTER);
+//    }
 }
