@@ -56,48 +56,48 @@ public class SwitchCabinetPageVO implements Serializable {
     @Schema(description = "高压柜SN号")
     private String snHCode;
 
-    @JsonProperty("hNcrDiscription1")
+    @JsonProperty("hNcrDescription1")
     @Schema(description = "高压柜NCR描述1")
-    private String hNcrDiscription1;
+    private String hNcrDescription1;
 
-    @JsonProperty("hNcrDiscription2")
+    @JsonProperty("hNcrDescription2")
     @Schema(description = "高压柜NCR描述2")
-    private String hNcrDiscription2;
+    private String hNcrDescription2;
 
-    @JsonProperty("hNcrDiscription3")
+    @JsonProperty("hNcrDescription3")
     @Schema(description = "高压柜NCR描述3")
-    private String hNcrDiscription3;
+    private String hNcrDescription3;
 
-    @JsonProperty("hNcrDiscription4")
+    @JsonProperty("hNcrDescription4")
     @Schema(description = "高压柜NCR描述4")
-    private String hNcrDiscription4;
+    private String hNcrDescription4;
 
-    @JsonProperty("hNcrDiscription5")
+    @JsonProperty("hNcrDescription5")
     @Schema(description = "高压柜NCR描述5")
-    private String hNcrDiscription5;
+    private String hNcrDescription5;
 
     @Schema(description = "低压柜SN号")
     private String snLCode;
 
-    @JsonProperty("lNcrDiscription1")
+    @JsonProperty("lNcrDescription1")
     @Schema(description = "低压柜NCR描述1")
-    private String lNcrDiscription1;
+    private String lNcrDescription1;
 
-    @JsonProperty("lNcrDiscription2")
+    @JsonProperty("lNcrDescription2")
     @Schema(description = "低压柜NCR描述2")
-    private String lNcrDiscription2;
+    private String lNcrDescription2;
 
-    @JsonProperty("lNcrDiscription3")
+    @JsonProperty("lNcrDescription3")
     @Schema(description = "低压柜NCR描述3")
-    private String lNcrDiscription3;
+    private String lNcrDescription3;
 
-    @JsonProperty("lNcrDiscription4")
+    @JsonProperty("lNcrDescription4")
     @Schema(description = "低压柜NCR描述4")
-    private String lNcrDiscription4;
+    private String lNcrDescription4;
 
-    @JsonProperty("lNcrDiscription5")
+    @JsonProperty("lNcrDescription5")
     @Schema(description = "低压柜NCR描述5")
-    private String lNcrDiscription5;
+    private String lNcrDescription5;
 
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

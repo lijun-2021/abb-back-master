@@ -18,17 +18,17 @@
         sc.create_time AS createTime,
         sc.update_time AS updateTime,
         cd.sn_h_code AS snHCode,
-        NULLIF(cd.h_ncr_discription1, '') AS hNcrDiscription1,
-        NULLIF(cd.h_ncr_discription2, '') AS hNcrDiscription2,
-        NULLIF(cd.h_ncr_discription3, '') AS hNcrDiscription3,
-        NULLIF(cd.h_ncr_discription4, '') AS hNcrDiscription4,
-        NULLIF(cd.h_ncr_discription5, '') AS hNcrDiscription5,
+        NULLIF(cd.h_ncr_Description1, '') AS hNcrDescription1,
+        NULLIF(cd.h_ncr_Description2, '') AS hNcrDescription2,
+        NULLIF(cd.h_ncr_Description3, '') AS hNcrDescription3,
+        NULLIF(cd.h_ncr_Description4, '') AS hNcrDescription4,
+        NULLIF(cd.h_ncr_Description5, '') AS hNcrDescription5,
         cd.sn_l_code AS snLCode,
-        NULLIF(cd.l_ncr_discription1, '') AS lNcrDiscription1,
-        NULLIF(cd.l_ncr_discription2, '') AS lNcrDiscription2,
-        NULLIF(cd.l_ncr_discription3, '') AS lNcrDiscription3,
-        NULLIF(cd.l_ncr_discription4, '') AS lNcrDiscription4,
-        NULLIF(cd.l_ncr_discription5, '') AS lNcrDiscription5
+        NULLIF(cd.l_ncr_Description1, '') AS lNcrDescription1,
+        NULLIF(cd.l_ncr_Description2, '') AS lNcrDescription2,
+        NULLIF(cd.l_ncr_Description3, '') AS lNcrDescription3,
+        NULLIF(cd.l_ncr_Description4, '') AS lNcrDescription4,
+        NULLIF(cd.l_ncr_Description5, '') AS lNcrDescription5
         FROM
         fqc_switch_cabinet sc
         LEFT JOIN fqc_cabinet_detail cd ON sc.sn_code = cd.sn_code AND cd.is_deleted = 0

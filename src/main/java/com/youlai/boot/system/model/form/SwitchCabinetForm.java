@@ -42,6 +42,7 @@ public class SwitchCabinetForm implements Serializable {
     @Schema(description = "功能员工姓名")
     private String functionEmpName;
 
+
     @Schema(description = "检测区域")
     private String area;
 }
