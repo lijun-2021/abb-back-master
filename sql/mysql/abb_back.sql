@@ -36,6 +36,12 @@ CREATE TABLE `fqc_display` (
 CREATE TABLE `fqc_cabinet_detail` (
                                       `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                                       `sn_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '开关柜SN号',
+                                      `FAT` tinyint(1) DEFAULT NULL COMMENT 'FAT标识(布尔:0否/1是)',
+                                      `FATBeginT` datetime DEFAULT NULL COMMENT 'FAT开始时间',
+                                      `FATEndT` datetime DEFAULT NULL COMMENT 'FAT结束时间',
+                                      `Rework` tinyint(1) DEFAULT NULL COMMENT '返工标识(布尔:0否/1是)',
+                                      `ReworkBeginT` datetime DEFAULT NULL COMMENT '返工开始时间',
+                                      `ReworkEndT` datetime DEFAULT NULL COMMENT '返工结束时间',
                                       `sn_h_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '高压柜SN号',
                                       `h_ncr_Description1` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '高压柜NCR描述1',
                                       `h_ncr_Description2` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '高压柜NCR描述2',

@@ -28,7 +28,10 @@
         NULLIF(cd.l_ncr_Description2, '') AS lNcrDescription2,
         NULLIF(cd.l_ncr_Description3, '') AS lNcrDescription3,
         NULLIF(cd.l_ncr_Description4, '') AS lNcrDescription4,
-        NULLIF(cd.l_ncr_Description5, '') AS lNcrDescription5
+        NULLIF(cd.l_ncr_Description5, '') AS lNcrDescription5,
+        cd.fat,
+        cd.fatBeginT,
+        cd.fatEndT
         FROM
         fqc_switch_cabinet sc
         LEFT JOIN fqc_cabinet_detail cd ON sc.sn_code = cd.sn_code AND cd.is_deleted = 0
