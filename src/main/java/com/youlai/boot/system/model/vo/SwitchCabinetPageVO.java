@@ -100,7 +100,7 @@ public class SwitchCabinetPageVO implements Serializable {
     private String lNcrDescription5;
 
     @Schema(description = "FAT状态")
-    private String fat;
+    private Integer fat;
 
     @Schema(description = "FAT开始时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
