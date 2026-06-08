@@ -69,7 +69,13 @@
                 </if>
             </if>
         </where>
-        ORDER BY sc.offline_time ASC
+        ORDER BY
+            sc.offline_time DESC,
+            CASE
+                WHEN sc.function_starttime IS NULL THEN 0
+                WHEN sc.function_endtime IS NULL THEN 1
+                ELSE 2
+            END ASC
     </select>
 
 
