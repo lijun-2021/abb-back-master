@@ -21,13 +21,15 @@ import java.util.List;
 /**
  * 员工任务业务实现类
  *
-* @author lijun
-* @since 2026/04/23
+ * @author lijun
+ * @since 2026/04/23
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, EmployeeTask> implements EmployeeTaskService {
+
+    private static final int MAX_SN_SLOTS = 20;
 
     /**
      * 获取员工任务分页列表
@@ -42,7 +44,7 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
     }
 
     /**
-     * 为员工分配SN号任务（按顺序填充sn_code1~sn_code10）
+     * 为员工分配SN号任务（按顺序填充sn_code1~sn_code20）
      *
      * @param empId   员工ID
      * @param empName 员工姓名
@@ -59,33 +61,11 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
         );
 
         for (EmployeeTask task : allEmployeeTasks) {
-            boolean found = false;
-            if (snCode.equals(task.getSnCode1())) { task.setSnCode1(null); found = true; }
-            else if (snCode.equals(task.getSnCode2())) { task.setSnCode2(null); found = true; }
-            else if (snCode.equals(task.getSnCode3())) { task.setSnCode3(null); found = true; }
-            else if (snCode.equals(task.getSnCode4())) { task.setSnCode4(null); found = true; }
-            else if (snCode.equals(task.getSnCode5())) { task.setSnCode5(null); found = true; }
-            else if (snCode.equals(task.getSnCode6())) { task.setSnCode6(null); found = true; }
-            else if (snCode.equals(task.getSnCode7())) { task.setSnCode7(null); found = true; }
-            else if (snCode.equals(task.getSnCode8())) { task.setSnCode8(null); found = true; }
-            else if (snCode.equals(task.getSnCode9())) { task.setSnCode9(null); found = true; }
-            else if (snCode.equals(task.getSnCode10())) { task.setSnCode10(null); found = true; }
+            boolean found = removeSnCodeFromTask(task, snCode);
 
             if (found && !task.getEmpId().equals(empId)) {
                 compactSnCodes(task);
-                // 【修复】使用显式 set 强制更新所有字段
-                this.update(null, new LambdaUpdateWrapper<EmployeeTask>()
-                        .eq(EmployeeTask::getId, task.getId())
-                        .set(EmployeeTask::getSnCode1, task.getSnCode1())
-                        .set(EmployeeTask::getSnCode2, task.getSnCode2())
-                        .set(EmployeeTask::getSnCode3, task.getSnCode3())
-                        .set(EmployeeTask::getSnCode4, task.getSnCode4())
-                        .set(EmployeeTask::getSnCode5, task.getSnCode5())
-                        .set(EmployeeTask::getSnCode6, task.getSnCode6())
-                        .set(EmployeeTask::getSnCode7, task.getSnCode7())
-                        .set(EmployeeTask::getSnCode8, task.getSnCode8())
-                        .set(EmployeeTask::getSnCode9, task.getSnCode9())
-                        .set(EmployeeTask::getSnCode10, task.getSnCode10()));
+                this.update(null, buildUpdateWrapper(task));
                 log.info(">>> [独占分配] 已从员工 {} (ID:{}) 移除SN号: {} 并自动前移", task.getEmpName(), task.getEmpId(), snCode);
             }
         }
@@ -109,57 +89,14 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
         } else {
             compactSnCodes(employeeTask);
 
-            boolean alreadyExists = snCode.equals(employeeTask.getSnCode1()) ||
-                    snCode.equals(employeeTask.getSnCode2()) ||
-                    snCode.equals(employeeTask.getSnCode3()) ||
-                    snCode.equals(employeeTask.getSnCode4()) ||
-                    snCode.equals(employeeTask.getSnCode5()) ||
-                    snCode.equals(employeeTask.getSnCode6()) ||
-                    snCode.equals(employeeTask.getSnCode7()) ||
-                    snCode.equals(employeeTask.getSnCode8()) ||
-                    snCode.equals(employeeTask.getSnCode9()) ||
-                    snCode.equals(employeeTask.getSnCode10());
-
-            if (!alreadyExists) {
-                String assignedSlot = null;
-                if (StrUtil.isBlank(employeeTask.getSnCode1())) {
-                    employeeTask.setSnCode1(snCode); assignedSlot = "sn_code1";
-                } else if (StrUtil.isBlank(employeeTask.getSnCode2())) {
-                    employeeTask.setSnCode2(snCode); assignedSlot = "sn_code2";
-                } else if (StrUtil.isBlank(employeeTask.getSnCode3())) {
-                    employeeTask.setSnCode3(snCode); assignedSlot = "sn_code3";
-                } else if (StrUtil.isBlank(employeeTask.getSnCode4())) {
-                    employeeTask.setSnCode4(snCode); assignedSlot = "sn_code4";
-                } else if (StrUtil.isBlank(employeeTask.getSnCode5())) {
-                    employeeTask.setSnCode5(snCode); assignedSlot = "sn_code5";
-                } else if (StrUtil.isBlank(employeeTask.getSnCode6())) {
-                    employeeTask.setSnCode6(snCode); assignedSlot = "sn_code6";
-                } else if (StrUtil.isBlank(employeeTask.getSnCode7())) {
-                    employeeTask.setSnCode7(snCode); assignedSlot = "sn_code7";
-                } else if (StrUtil.isBlank(employeeTask.getSnCode8())) {
-                    employeeTask.setSnCode8(snCode); assignedSlot = "sn_code8";
-                } else if (StrUtil.isBlank(employeeTask.getSnCode9())) {
-                    employeeTask.setSnCode9(snCode); assignedSlot = "sn_code9";
-                } else if (StrUtil.isBlank(employeeTask.getSnCode10())) {
-                    employeeTask.setSnCode10(snCode); assignedSlot = "sn_code10";
-                } else {
+            if (!containsSnCode(employeeTask, snCode)) {
+                String assignedSlot = assignToFirstEmptySlot(employeeTask, snCode);
+                if (assignedSlot == null) {
                     log.error(">>> [独占分配-失败] 员工 {} (ID:{}) 任务已满，无法分配SN号: {}", empName, empId, snCode);
-                    throw new RuntimeException("该员工任务已满（最多10个）");
+                    throw new RuntimeException("该员工任务已满（最多" + MAX_SN_SLOTS + "个）");
                 }
             }
-            // 【修复】使用显式 set 强制更新
-            this.update(null, new LambdaUpdateWrapper<EmployeeTask>()
-                    .eq(EmployeeTask::getId, employeeTask.getId())
-                    .set(EmployeeTask::getSnCode1, employeeTask.getSnCode1())
-                    .set(EmployeeTask::getSnCode2, employeeTask.getSnCode2())
-                    .set(EmployeeTask::getSnCode3, employeeTask.getSnCode3())
-                    .set(EmployeeTask::getSnCode4, employeeTask.getSnCode4())
-                    .set(EmployeeTask::getSnCode5, employeeTask.getSnCode5())
-                    .set(EmployeeTask::getSnCode6, employeeTask.getSnCode6())
-                    .set(EmployeeTask::getSnCode7, employeeTask.getSnCode7())
-                    .set(EmployeeTask::getSnCode8, employeeTask.getSnCode8())
-                    .set(EmployeeTask::getSnCode9, employeeTask.getSnCode9())
-                    .set(EmployeeTask::getSnCode10, employeeTask.getSnCode10()));
+            this.update(null, buildUpdateWrapper(employeeTask));
             log.info(">>> [独占分配-成功] 将SN号 {} 分配到员工 {} (ID:{})", snCode, empName, empId);
         }
 
@@ -175,36 +112,109 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
         );
 
         if (employeeTask != null) {
-            boolean removed = false;
-            if (snCode.equals(employeeTask.getSnCode1())) { employeeTask.setSnCode1(null); removed = true; }
-            else if (snCode.equals(employeeTask.getSnCode2())) { employeeTask.setSnCode2(null); removed = true; }
-            else if (snCode.equals(employeeTask.getSnCode3())) { employeeTask.setSnCode3(null); removed = true; }
-            else if (snCode.equals(employeeTask.getSnCode4())) { employeeTask.setSnCode4(null); removed = true; }
-            else if (snCode.equals(employeeTask.getSnCode5())) { employeeTask.setSnCode5(null); removed = true; }
-            else if (snCode.equals(employeeTask.getSnCode6())) { employeeTask.setSnCode6(null); removed = true; }
-            else if (snCode.equals(employeeTask.getSnCode7())) { employeeTask.setSnCode7(null); removed = true; }
-            else if (snCode.equals(employeeTask.getSnCode8())) { employeeTask.setSnCode8(null); removed = true; }
-            else if (snCode.equals(employeeTask.getSnCode9())) { employeeTask.setSnCode9(null); removed = true; }
-            else if (snCode.equals(employeeTask.getSnCode10())) { employeeTask.setSnCode10(null); removed = true; }
+            boolean removed = removeSnCodeFromTask(employeeTask, snCode);
 
             if (removed) {
                 compactSnCodes(employeeTask);
-                // 【修复】使用显式 set 强制同步
-                this.update(null, new LambdaUpdateWrapper<EmployeeTask>()
-                        .eq(EmployeeTask::getId, employeeTask.getId())
-                        .set(EmployeeTask::getSnCode1, employeeTask.getSnCode1())
-                        .set(EmployeeTask::getSnCode2, employeeTask.getSnCode2())
-                        .set(EmployeeTask::getSnCode3, employeeTask.getSnCode3())
-                        .set(EmployeeTask::getSnCode4, employeeTask.getSnCode4())
-                        .set(EmployeeTask::getSnCode5, employeeTask.getSnCode5())
-                        .set(EmployeeTask::getSnCode6, employeeTask.getSnCode6())
-                        .set(EmployeeTask::getSnCode7, employeeTask.getSnCode7())
-                        .set(EmployeeTask::getSnCode8, employeeTask.getSnCode8())
-                        .set(EmployeeTask::getSnCode9, employeeTask.getSnCode9())
-                        .set(EmployeeTask::getSnCode10, employeeTask.getSnCode10()));
+                this.update(null, buildUpdateWrapper(employeeTask));
                 log.info("从员工 {} (ID:{}) 任务中移除SN号: {} 并自动前移填充", employeeTask.getEmpName(), empId, snCode);
             }
         }
+    }
+
+    private String[] getSnCodes(EmployeeTask task) {
+        return new String[]{
+                task.getSnCode1(), task.getSnCode2(), task.getSnCode3(), task.getSnCode4(), task.getSnCode5(),
+                task.getSnCode6(), task.getSnCode7(), task.getSnCode8(), task.getSnCode9(), task.getSnCode10(),
+                task.getSnCode11(), task.getSnCode12(), task.getSnCode13(), task.getSnCode14(), task.getSnCode15(),
+                task.getSnCode16(), task.getSnCode17(), task.getSnCode18(), task.getSnCode19(), task.getSnCode20()
+        };
+    }
+
+    private void setSnCodes(EmployeeTask task, String[] snCodes) {
+        task.setSnCode1(snCodes[0]);
+        task.setSnCode2(snCodes[1]);
+        task.setSnCode3(snCodes[2]);
+        task.setSnCode4(snCodes[3]);
+        task.setSnCode5(snCodes[4]);
+        task.setSnCode6(snCodes[5]);
+        task.setSnCode7(snCodes[6]);
+        task.setSnCode8(snCodes[7]);
+        task.setSnCode9(snCodes[8]);
+        task.setSnCode10(snCodes[9]);
+        task.setSnCode11(snCodes[10]);
+        task.setSnCode12(snCodes[11]);
+        task.setSnCode13(snCodes[12]);
+        task.setSnCode14(snCodes[13]);
+        task.setSnCode15(snCodes[14]);
+        task.setSnCode16(snCodes[15]);
+        task.setSnCode17(snCodes[16]);
+        task.setSnCode18(snCodes[17]);
+        task.setSnCode19(snCodes[18]);
+        task.setSnCode20(snCodes[19]);
+    }
+
+    private boolean removeSnCodeFromTask(EmployeeTask task, String snCode) {
+        String[] codes = getSnCodes(task);
+        boolean found = false;
+        for (int i = 0; i < codes.length; i++) {
+            if (snCode.equals(codes[i])) {
+                codes[i] = null;
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            setSnCodes(task, codes);
+        }
+        return found;
+    }
+
+    private boolean containsSnCode(EmployeeTask task, String snCode) {
+        String[] codes = getSnCodes(task);
+        for (String code : codes) {
+            if (snCode.equals(code)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String assignToFirstEmptySlot(EmployeeTask task, String snCode) {
+        String[] codes = getSnCodes(task);
+        for (int i = 0; i < codes.length; i++) {
+            if (StrUtil.isBlank(codes[i])) {
+                codes[i] = snCode;
+                setSnCodes(task, codes);
+                return "sn_code" + (i + 1);
+            }
+        }
+        return null;
+    }
+
+    private LambdaUpdateWrapper<EmployeeTask> buildUpdateWrapper(EmployeeTask task) {
+        return new LambdaUpdateWrapper<EmployeeTask>()
+                .eq(EmployeeTask::getId, task.getId())
+                .set(EmployeeTask::getSnCode1, task.getSnCode1())
+                .set(EmployeeTask::getSnCode2, task.getSnCode2())
+                .set(EmployeeTask::getSnCode3, task.getSnCode3())
+                .set(EmployeeTask::getSnCode4, task.getSnCode4())
+                .set(EmployeeTask::getSnCode5, task.getSnCode5())
+                .set(EmployeeTask::getSnCode6, task.getSnCode6())
+                .set(EmployeeTask::getSnCode7, task.getSnCode7())
+                .set(EmployeeTask::getSnCode8, task.getSnCode8())
+                .set(EmployeeTask::getSnCode9, task.getSnCode9())
+                .set(EmployeeTask::getSnCode10, task.getSnCode10())
+                .set(EmployeeTask::getSnCode11, task.getSnCode11())
+                .set(EmployeeTask::getSnCode12, task.getSnCode12())
+                .set(EmployeeTask::getSnCode13, task.getSnCode13())
+                .set(EmployeeTask::getSnCode14, task.getSnCode14())
+                .set(EmployeeTask::getSnCode15, task.getSnCode15())
+                .set(EmployeeTask::getSnCode16, task.getSnCode16())
+                .set(EmployeeTask::getSnCode17, task.getSnCode17())
+                .set(EmployeeTask::getSnCode18, task.getSnCode18())
+                .set(EmployeeTask::getSnCode19, task.getSnCode19())
+                .set(EmployeeTask::getSnCode20, task.getSnCode20());
     }
 
     /**
@@ -213,37 +223,20 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
      * @param employeeTask 员工任务对象
      */
     private void compactSnCodes(EmployeeTask employeeTask) {
-        String[] originalSnCodes = new String[10];
-        originalSnCodes[0] = employeeTask.getSnCode1();
-        originalSnCodes[1] = employeeTask.getSnCode2();
-        originalSnCodes[2] = employeeTask.getSnCode3();
-        originalSnCodes[3] = employeeTask.getSnCode4();
-        originalSnCodes[4] = employeeTask.getSnCode5();
-        originalSnCodes[5] = employeeTask.getSnCode6();
-        originalSnCodes[6] = employeeTask.getSnCode7();
-        originalSnCodes[7] = employeeTask.getSnCode8();
-        originalSnCodes[8] = employeeTask.getSnCode9();
-        originalSnCodes[9] = employeeTask.getSnCode10();
-
-        String[] compactedSnCodes = new String[10];
+        String[] originalSnCodes = getSnCodes(employeeTask);
+        String[] compactedSnCodes = new String[MAX_SN_SLOTS];
         int writeIndex = 0;
 
-        for (int readIndex = 0; readIndex < 10; readIndex++) {
+        for (int readIndex = 0; readIndex < MAX_SN_SLOTS; readIndex++) {
             if (StrUtil.isNotBlank(originalSnCodes[readIndex])) {
                 compactedSnCodes[writeIndex] = originalSnCodes[readIndex];
                 writeIndex++;
             }
         }
 
-        employeeTask.setSnCode1(compactedSnCodes[0]);
-        employeeTask.setSnCode2(compactedSnCodes[1]);
-        employeeTask.setSnCode3(compactedSnCodes[2]);
-        employeeTask.setSnCode4(compactedSnCodes[3]);
-        employeeTask.setSnCode5(compactedSnCodes[4]);
-        employeeTask.setSnCode6(compactedSnCodes[5]);
-        employeeTask.setSnCode7(compactedSnCodes[6]);
-        employeeTask.setSnCode8(compactedSnCodes[7]);
-        employeeTask.setSnCode9(compactedSnCodes[8]);
-        employeeTask.setSnCode10(compactedSnCodes[9]);
+        setSnCodes(employeeTask, compactedSnCodes);
     }
 }
+
+
+

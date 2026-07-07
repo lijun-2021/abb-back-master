@@ -30,6 +30,12 @@ public class EmployeeTaskPageVO implements Serializable {
     @Schema(description = "员工姓名")
     private String empName;
 
+    @Schema(description = "组别(A/B/C/D)")
+    private String empTeam;
+
+    @Schema(description = "员工考勤状态:1-在岗 2-FAT 3-耐压 4-请假 5-离职")
+    private Integer attendanceState;
+
     @Schema(description = "任务类型:1-耐压,2-功能")
     private Integer taskType;
 
@@ -53,6 +59,27 @@ public class EmployeeTaskPageVO implements Serializable {
     private String snCode9;
     @Schema(description = "分配SN10号")
     private String snCode10;
+    @Schema(description = "分配SN11号")
+    private String snCode11;
+    @Schema(description = "分配SN12号")
+    private String snCode12;
+    @Schema(description = "分配SN13号")
+    private String snCode13;
+    @Schema(description = "分配SN14号")
+    private String snCode14;
+    @Schema(description = "分配SN15号")
+    private String snCode15;
+    @Schema(description = "分配SN16号")
+    private String snCode16;
+    @Schema(description = "分配SN17号")
+    private String snCode17;
+    @Schema(description = "分配SN18号")
+    private String snCode18;
+    @Schema(description = "分配SN19号")
+    private String snCode19;
+    @Schema(description = "分配SN20号")
+    private String snCode20;
+
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;

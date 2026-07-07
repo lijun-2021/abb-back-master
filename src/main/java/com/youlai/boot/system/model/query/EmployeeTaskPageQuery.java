@@ -22,6 +22,9 @@ public class EmployeeTaskPageQuery extends BasePageQuery {
     @Schema(description = "员工姓名")
     private String empName;
 
+    @Schema(description = "组别(A/B/C/D)")
+    private String empTeam;
+
     @Schema(description = "任务类型:1-耐压, 2-功能")
     private Integer taskType;
 

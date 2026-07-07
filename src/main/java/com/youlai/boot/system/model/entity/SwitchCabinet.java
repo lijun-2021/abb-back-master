@@ -24,6 +24,16 @@ public class SwitchCabinet extends BaseEntity {
     private String snCode;
 
     /**
+     * SN合同号
+     */
+    private String snContract;
+
+    /**
+     * 挂证状态
+     */
+    private Integer certification;
+
+    /**
      * 产线
      */
     private String productionLine;

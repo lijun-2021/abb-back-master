@@ -7,10 +7,12 @@
     <!-- 员工任务分页列表查询 -->
     <select id="getEmployeeTaskPage" resultType="com.youlai.boot.system.model.vo.EmployeeTaskPageVO">
         SELECT
-        id,
-        emp_id AS empId,
-        emp_name AS empName,
-        task_type AS taskType,
+        et.id,
+        et.emp_id AS empId,
+        et.emp_name AS empName,
+        et.emp_team AS empTeam,
+        ar.state AS attendanceState,
+        et.task_type AS taskType,
         sn_code1 AS snCode1,
         sn_code2 AS snCode2,
         sn_code3 AS snCode3,
@@ -21,12 +23,23 @@
         sn_code8 AS snCode8,
         sn_code9 AS snCode9,
         sn_code10 AS snCode10,
-        create_time AS createTime,
-        update_time AS updateTime
+        sn_code11 AS snCode11,
+        sn_code12 AS snCode12,
+        sn_code13 AS snCode13,
+        sn_code14 AS snCode14,
+        sn_code15 AS snCode15,
+        sn_code16 AS snCode16,
+        sn_code17 AS snCode17,
+        sn_code18 AS snCode18,
+        sn_code19 AS snCode19,
+        sn_code20 AS snCode20,
+        et.create_time AS createTime,
+        et.update_time AS updateTime
         FROM
-        fqc_employee_task
+        fqc_employee_task et
+        LEFT JOIN fqc_attendance_record ar ON et.emp_id = ar.emp_id
         <where>
-            is_deleted = 0
+            et.is_deleted = 0
             <!-- 员工ID精确查询 -->
             <if test="queryParams.empId != null and queryParams.empId.trim() neq ''">
                 AND emp_id = #{queryParams.empId}
@@ -39,7 +52,7 @@
             <if test="queryParams.taskType != null">
                 AND task_type = #{queryParams.taskType}
             </if>
-            <!-- SN号模糊查询(匹配sn_code1~sn_code10) -->
+            <!-- SN号模糊查询(匹配sn_code1~sn_code20) -->
             <if test="queryParams.snCode != null and queryParams.snCode.trim() neq ''">
                 AND (
                 sn_code1 LIKE CONCAT('%', #{queryParams.snCode}, '%')
@@ -52,7 +65,21 @@
                 OR sn_code8 LIKE CONCAT('%', #{queryParams.snCode}, '%')
                 OR sn_code9 LIKE CONCAT('%', #{queryParams.snCode}, '%')
                 OR sn_code10 LIKE CONCAT('%', #{queryParams.snCode}, '%')
+                OR sn_code11 LIKE CONCAT('%', #{queryParams.snCode}, '%')
+                OR sn_code12 LIKE CONCAT('%', #{queryParams.snCode}, '%')
+                OR sn_code13 LIKE CONCAT('%', #{queryParams.snCode}, '%')
+                OR sn_code14 LIKE CONCAT('%', #{queryParams.snCode}, '%')
+                OR sn_code15 LIKE CONCAT('%', #{queryParams.snCode}, '%')
+                OR sn_code16 LIKE CONCAT('%', #{queryParams.snCode}, '%')
+                OR sn_code17 LIKE CONCAT('%', #{queryParams.snCode}, '%')
+                OR sn_code18 LIKE CONCAT('%', #{queryParams.snCode}, '%')
+                OR sn_code19 LIKE CONCAT('%', #{queryParams.snCode}, '%')
+                OR sn_code20 LIKE CONCAT('%', #{queryParams.snCode}, '%')
                 )
+            </if>
+            <!-- 组别精确查询 -->
+            <if test="queryParams.empTeam != null and queryParams.empTeam.trim() neq ''">
+                AND emp_team = #{queryParams.empTeam}
             </if>
         </where>
         <!-- 优先级： 先按更新时间→再按任务类型排序 → 后按任务序号 -->

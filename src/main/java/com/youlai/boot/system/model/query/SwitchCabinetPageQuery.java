@@ -25,6 +25,9 @@ public class SwitchCabinetPageQuery extends BasePageQuery {
     @Schema(description = "开关柜SN号")
     private String snCode;
 
+    @Schema(description = "SN合同号")
+    private String snContract;
+
     @Schema(description = "产线")
     private String productionLine;
 
@@ -33,6 +36,15 @@ public class SwitchCabinetPageQuery extends BasePageQuery {
 
     @Schema(description = "下线时间范围")
     private List<String> offlineTime;
+
+    @Schema(description = "功能员工姓名(模糊查询)")
+    private String functionEmpName;
+
+    @Schema(description = "是否需要FAT(0-否,1-是)")
+    private Integer fat;
+
+    @Schema(description = "功能检测状态(0-未完成,1-进行中,2-已完成)")
+    private Integer functionStatus;
 
 //    /**
 //     * 是否超级管理员（用于数据权限控制）

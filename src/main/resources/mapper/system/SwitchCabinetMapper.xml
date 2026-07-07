@@ -14,9 +14,17 @@
         sc.function_starttime AS functionStarttime,
         sc.function_endtime AS functionEndtime,
         sc.function_emp_name AS functionEmpName,
+        et.emp_team AS empTeam,
         sc.area,
+        sc.sn_contract AS snContract,
+        sc.certification,
         sc.create_time AS createTime,
         sc.update_time AS updateTime,
+        CASE
+        WHEN sc.function_starttime IS NULL THEN 0
+        WHEN sc.function_endtime IS NULL THEN 1
+        ELSE 2
+        END AS functionStatus,
         cd.sn_h_code AS snHCode,
         NULLIF(cd.h_ncr_Description1, '') AS hNcrDescription1,
         NULLIF(cd.h_ncr_Description2, '') AS hNcrDescription2,
@@ -35,11 +43,16 @@
         FROM
         fqc_switch_cabinet sc
         LEFT JOIN fqc_cabinet_detail cd ON sc.sn_code = cd.sn_code AND cd.is_deleted = 0
+        LEFT JOIN fqc_employee_task et ON sc.function_emp_name = et.emp_name AND et.task_type = 2 AND et.is_deleted = 0
         <where>
             sc.is_deleted = 0
             <!-- SN号模糊查询 -->
             <if test="queryParams.snCode != null and queryParams.snCode.trim() neq ''">
                 AND sc.sn_code LIKE CONCAT('%', #{queryParams.snCode}, '%')
+            </if>
+            <!-- SN合同号模糊查询 -->
+            <if test="queryParams.snContract != null and queryParams.snContract.trim() neq ''">
+                AND sc.sn_contract LIKE CONCAT('%', #{queryParams.snContract}, '%')
             </if>
             <!-- 产线模糊查询 -->
             <if test="queryParams.productionLine != null and queryParams.productionLine.trim() neq ''">
@@ -57,6 +70,28 @@
                 OR sc.area LIKE CONCAT('%', #{queryParams.keywords}, '%')
                 )
             </if>
+            <!-- 功能员工姓名模糊查询 -->
+            <if test="queryParams.functionEmpName != null and queryParams.functionEmpName.trim() neq ''">
+                AND sc.function_emp_name LIKE CONCAT('%', #{queryParams.functionEmpName}, '%')
+            </if>
+            <!-- FAT状态查询 -->
+            <if test="queryParams.fat != null">
+                AND cd.fat = #{queryParams.fat}
+            </if>
+            <!-- 功能检测状态查询 -->
+            <if test="queryParams.functionStatus != null">
+                <choose>
+                    <when test="queryParams.functionStatus == 0">
+                        AND sc.function_starttime IS NULL
+                    </when>
+                    <when test="queryParams.functionStatus == 1">
+                        AND sc.function_starttime IS NOT NULL AND sc.function_endtime IS NULL
+                    </when>
+                    <when test="queryParams.functionStatus == 2">
+                        AND sc.function_starttime IS NOT NULL AND sc.function_endtime IS NOT NULL
+                    </when>
+                </choose>
+            </if>
             <!-- 下线时间范围查询 -->
             <if test="queryParams.offlineTime != null and queryParams.offlineTime.size() > 0">
                 <if test="queryParams.offlineTime[0] != null and queryParams.offlineTime[0] != ''">
@@ -70,12 +105,8 @@
             </if>
         </where>
         ORDER BY
-            sc.offline_time DESC,
-            CASE
-                WHEN sc.function_starttime IS NULL THEN 0
-                WHEN sc.function_endtime IS NULL THEN 1
-                ELSE 2
-            END ASC
+            functionStatus ASC,
+            offlineTime ASC
     </select>
 
 

@@ -29,6 +29,12 @@ public class SwitchCabinetPageVO implements Serializable {
     @Schema(description = "开关柜SN号")
     private String snCode;
 
+    @Schema(description = "SN合同号")
+    private String snContract;
+
+    @Schema(description = "挂证状态：0-未挂证 1-已挂证")
+    private Integer certification;
+
     @Schema(description = "产线")
     private String productionLine;
 
@@ -36,19 +42,14 @@ public class SwitchCabinetPageVO implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime offlineTime;
 
-    @JsonIgnore
-    @Schema(description = "功能检测开始时间（仅用于内部计算状态，不返回前端）")
-    private LocalDateTime functionStarttime;
-
-    @JsonIgnore
-    @Schema(description = "功能检测结束时间（仅用于内部计算状态，不返回前端）")
-    private LocalDateTime functionEndtime;
-
     @Schema(description = "功能检测状态:0-未完成,1-进行中,2-已完成")
     private Integer functionStatus;
 
     @Schema(description = "功能员工姓名")
     private String functionEmpName;
+
+    @Schema(description = "功能员工组别(A/B/C/D)")
+    private String empTeam;
 
     @Schema(description = "检测区域")
     private String area;

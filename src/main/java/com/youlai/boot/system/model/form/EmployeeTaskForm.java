@@ -56,5 +56,25 @@ public class EmployeeTaskForm implements Serializable {
     private String snCode9;
     @Schema(description = "分配SN10号")
     private String snCode10;
+    @Schema(description = "分配SN11号")
+    private String snCode11;
+    @Schema(description = "分配SN12号")
+    private String snCode12;
+    @Schema(description = "分配SN13号")
+    private String snCode13;
+    @Schema(description = "分配SN14号")
+    private String snCode14;
+    @Schema(description = "分配SN15号")
+    private String snCode15;
+    @Schema(description = "分配SN16号")
+    private String snCode16;
+    @Schema(description = "分配SN17号")
+    private String snCode17;
+    @Schema(description = "分配SN18号")
+    private String snCode18;
+    @Schema(description = "分配SN19号")
+    private String snCode19;
+    @Schema(description = "分配SN20号")
+    private String snCode20;
 
 }

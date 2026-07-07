@@ -26,7 +26,7 @@ public interface EmployeeTaskService extends IService<EmployeeTask> {
     IPage<EmployeeTaskPageVO> getEmployeeTaskPage(EmployeeTaskPageQuery queryParams);
 
     /**
-     * 为员工分配SN号任务（按顺序填充sn_code1~sn_code10）
+     * 为员工分配SN号任务（按顺序填充sn_code1~sn_code20）
      *
      * @param empId    员工ID
      * @param empName  员工姓名

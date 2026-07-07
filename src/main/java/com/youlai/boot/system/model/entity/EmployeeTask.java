@@ -22,6 +22,11 @@ public class EmployeeTask extends BaseEntity {
     private String empId;
 
     /**
+     * 组别(A/B/C/D)
+     */
+    private String empTeam;
+
+    /**
      * 员工姓名
      */
     private String empName;
@@ -32,7 +37,7 @@ public class EmployeeTask extends BaseEntity {
     private Integer taskType;
 
     /**
-     * 分配SN序号
+     * 分配SN序号1-20
      */
     private String snCode1;
     private String snCode2;
@@ -44,6 +49,17 @@ public class EmployeeTask extends BaseEntity {
     private String snCode8;
     private String snCode9;
     private String snCode10;
+    private String snCode11;
+    private String snCode12;
+    private String snCode13;
+    private String snCode14;
+    private String snCode15;
+    private String snCode16;
+    private String snCode17;
+    private String snCode18;
+    private String snCode19;
+    private String snCode20;
+
 
     /**
      * 是否删除 0-未删除 1-已删除

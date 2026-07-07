@@ -53,34 +53,8 @@ public class SwitchCabinetServiceImpl extends ServiceImpl<SwitchCabinetMapper, S
         Page<SwitchCabinetPageVO> page = new Page<>(queryParams.getPageNum(), queryParams.getPageSize());
         IPage<SwitchCabinetPageVO> result = this.baseMapper.getSwitchCabinetPage(page, queryParams);
 
-        // 处理功能检测状态
-        for (SwitchCabinetPageVO vo : result.getRecords()) {
-            vo.setFunctionStatus(calculateFunctionStatus(vo.getFunctionStarttime(), vo.getFunctionEndtime()));
-        }
-
         return result;
     }
-
-    /**
-     * 计算功能检测状态
-     * 0-未完成：function_starttime 为空
-     * 1-进行中：function_starttime 不为空，function_endtime 为空
-     * 2-已完成：function_starttime 不为空，function_endtime 不为空
-     *
-     * @param functionStarttime 功能检测开始时间
-     * @param functionEndtime   功能检测结束时间
-     * @return 状态码 0-未完成 1-进行中 2-已完成
-     */
-    private Integer calculateFunctionStatus(LocalDateTime functionStarttime, LocalDateTime functionEndtime) {
-        if (functionStarttime == null) {
-            return 0; // 未完成
-        }
-        if (functionEndtime == null) {
-            return 1; // 进行中
-        }
-        return 2; // 已完成
-    }
-
 
     /**
      * 开关柜指派员工
