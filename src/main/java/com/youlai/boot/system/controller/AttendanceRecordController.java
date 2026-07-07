@@ -39,7 +39,7 @@ public class AttendanceRecordController {
         return PageResult.success(result);
     }
 
-    @Operation(summary = "更新员工考勤状态")
+    @Operation(summary = "更新员工考勤状态（支持单条和批量）")
     @PatchMapping("/state")
     @Log(value = "更新员工考勤状态", module = LogModuleEnum.OTHER)
     public Result<Void> updateAttendanceState(
