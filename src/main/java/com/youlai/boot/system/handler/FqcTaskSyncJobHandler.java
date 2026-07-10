@@ -1,10 +1,11 @@
 package com.youlai.boot.system.handler;
 
-import com.xxl.job.core.context.XxlJobHelper;
-import com.xxl.job.core.handler.annotation.XxlJob;
 import com.youlai.boot.system.service.EmployeeTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,34 +23,53 @@ public class FqcTaskSyncJobHandler {
     private final EmployeeTaskService employeeTaskService;
 
     /**
-     * 每天凌晨1点执行，复制昨日任务数据到今日
+     * 应用启动时自动检测并补充缺失天数的任务数据
+     * 处理因关机/停电等原因导致的定时任务未执行问题
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationReady() {
+        log.info("========== [启动检查] 应用启动，开始检测缺失天数的任务数据 ==========");
+        try {
+            int filledCount = employeeTaskService.fillMissingDaysTasks();
+            if (filledCount > 0) {
+                log.info("========== [启动检查完成] 成功补充 {} 条缺失天数的任务记录 ==========", filledCount);
+            } else {
+                log.info("========== [启动检查完成] 无缺失天数的任务数据 ==========");
+            }
+        } catch (Exception e) {
+            log.error("========== [启动检查失败] 补充缺失天数任务数据失败: {} ==========", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 每天凌晨1点执行，检测并复制缺失天数的任务数据
+     * 如果今天已有数据则跳过，避免重复复制
      * Cron表达式: 0 0 1 * * ? (每天凌晨1点)
      */
-    @XxlJob("fqcTaskSyncJobHandler")
+    @Scheduled(cron = "0 0 1 * * ?")
+    // @Scheduled(cron = "0 */5 * * * ?") //测试每5min
     public void execute() {
-        log.info("========== [XXL-JOB] FQC任务同步定时任务开始执行 ==========");
-        
+        log.info("========== [定时任务] FQC任务同步定时任务开始执行 ==========");
+
         try {
-            // 记录任务开始时间
             long startTime = System.currentTimeMillis();
-            
-            // 执行任务复制逻辑
-            int copiedCount = employeeTaskService.copyYesterdayTasksToToday();
-            
-            // 记录任务结束时间和耗时
+
+            // 使用 fillMissingDaysTasks，内部会检查今天是否已有数据
+            int copiedCount = employeeTaskService.fillMissingDaysTasks();
+
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
-            
-            String resultMsg = String.format("成功复制 %d 条员工任务记录，耗时 %d ms", copiedCount, duration);
-            log.info("========== [XXL-JOB] FQC任务同步定时任务执行完成: {} ==========", resultMsg);
-            
-            // 设置任务执行结果（用于在XXL-JOB管理后台查看）
-            XxlJobHelper.handleSuccess(resultMsg);
-            
+
+            if (copiedCount > 0) {
+                String resultMsg = String.format("成功复制 %d 条员工任务记录，耗时 %d ms", copiedCount, duration);
+                log.info("========== [定时任务] FQC任务同步定时任务执行完成: {} ==========", resultMsg);
+            } else {
+                log.info("========== [定时任务] 今日数据已存在，无需复制，耗时 {} ms ==========", duration);
+            }
+
         } catch (Exception e) {
             String errorMsg = "FQC任务同步定时任务执行失败: " + e.getMessage();
-            log.error("========== [XXL-JOB] {} ==========", errorMsg, e);
-            XxlJobHelper.handleFail(errorMsg);
+            log.error("========== [定时任务] {} ==========", errorMsg, e);
         }
     }
 }

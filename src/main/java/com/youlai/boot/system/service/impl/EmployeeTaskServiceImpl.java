@@ -7,7 +7,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.youlai.boot.system.mapper.EmployeeTaskMapper;
+import com.youlai.boot.system.mapper.SwitchCabinetMapper;
 import com.youlai.boot.system.model.entity.EmployeeTask;
+import com.youlai.boot.system.model.entity.SwitchCabinet;
 import com.youlai.boot.system.model.query.EmployeeTaskPageQuery;
 import com.youlai.boot.system.model.vo.EmployeeTaskPageVO;
 import com.youlai.boot.system.service.EmployeeTaskService;
@@ -16,7 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 员工任务业务实现类
@@ -30,6 +37,7 @@ import java.util.List;
 public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, EmployeeTask> implements EmployeeTaskService {
 
     private static final int MAX_SN_SLOTS = 20;
+    private final SwitchCabinetMapper switchCabinetMapper;
 
     /**
      * 获取员工任务分页列表
@@ -121,6 +129,147 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
             }
         }
     }
+
+    /**
+     * 复制昨日任务数据到今日
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int copyYesterdayTasksToToday() {
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
+        return copyTasksFromDateToDate(yesterday, today);
+    }
+
+    /**
+     * 检测并补充缺失天数的任务数据
+     * 应用启动时自动调用，处理因关机/停电等原因导致的定时任务未执行问题
+     * 会从最近有数据的日期开始，逐天复制到今天
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int fillMissingDaysTasks() {
+        log.info("========== [启动检查] 开始检测缺失天数的任务数据 ==========");
+        LocalDate today = LocalDate.now();
+
+        // 1. 查询数据库中最近有任务数据的日期
+        List<EmployeeTask> latestTasks = this.list(new LambdaQueryWrapper<EmployeeTask>()
+                .eq(EmployeeTask::getIsDeleted, 0)
+                .orderByDesc(EmployeeTask::getCreateTime)
+                .last("LIMIT 1")
+        );
+        if (latestTasks.isEmpty()) {
+            log.info(">>> [启动检查] 数据库中无任何任务数据，跳过");
+            return 0;
+        }
+        LocalDate latestDate = latestTasks.get(0).getCreateTime().toLocalDate();
+        log.info(">>> [启动检查] 数据库中最新任务数据日期: {}", latestDate);
+
+        // 2. 今天数据已存在，无需补充
+        if (latestDate.equals(today)) {
+            log.info(">>> [启动检查] 今日任务数据已存在，无需补充");
+            return 0;
+        }
+
+        // 3. 最新数据是昨天，执行正常复制
+        LocalDate yesterday = today.minusDays(1);
+        if (latestDate.equals(yesterday)) {
+            log.info(">>> [启动检查] 最新数据是昨天，执行正常的今日复制");
+            return copyTasksFromDateToDate(yesterday, today);
+        }
+
+        // 4. 存在多天缺失，逐天补充
+        LocalDate startDate = latestDate.plusDays(1);
+        int totalCopied = 0;
+        log.info(">>> [启动检查] 发现缺失天数: {} 天 (从 {} 到 {}), 开始逐天补充",
+                java.time.temporal.ChronoUnit.DAYS.between(startDate, today) + 1, startDate, today);
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(today)) {
+            LocalDate sourceDate = currentDate.minusDays(1);
+            int copied = copyTasksFromDateToDate(sourceDate, currentDate);
+            totalCopied += copied;
+            log.info(">>> [启动检查] 补充 {} 的任务: 复制了 {} 条记录", currentDate, copied);
+            currentDate = currentDate.plusDays(1);
+        }
+        log.info("========== [启动检查完成] 共补充 {} 条任务记录 ==========", totalCopied);
+        return totalCopied;
+    }
+
+    /**
+     * 核心复制逻辑：从源日期的任务数据复制到目标日期，过滤已完成的SN号
+     */
+    @Transactional(rollbackFor = Exception.class)
+    private int copyTasksFromDateToDate(LocalDate sourceDate, LocalDate targetDate) {
+        log.info(">>> [复制任务] 从 {} 复制到 {}", sourceDate, targetDate);
+        LocalDateTime sourceStart = sourceDate.atStartOfDay();
+        LocalDateTime sourceEnd = sourceDate.plusDays(1).atStartOfDay();
+
+        List<EmployeeTask> sourceTasks = this.list(new LambdaQueryWrapper<EmployeeTask>()
+                .ge(EmployeeTask::getCreateTime, sourceStart)
+                .lt(EmployeeTask::getCreateTime, sourceEnd)
+                .eq(EmployeeTask::getIsDeleted, 0)
+        );
+        if (sourceTasks.isEmpty()) {
+            log.info(">>> [复制任务] {} 无任务数据，跳过", sourceDate);
+            return 0;
+        }
+
+        // 获取开关柜状态
+        List<SwitchCabinet> allSwitchCabinets = switchCabinetMapper.selectList(new LambdaQueryWrapper<>());
+        Map<String, Integer> snCodeStatusMap = allSwitchCabinets.stream()
+                .filter(sc -> sc.getSnCode() != null)
+                .collect(Collectors.toMap(
+                        SwitchCabinet::getSnCode,
+                        sc -> {
+                            if (sc.getFunctionStarttime() == null) return 0;      // 未完成
+                            else if (sc.getFunctionEndtime() == null) return 1;   // 进行中
+                            else return 2;                                         // 已完成
+                        },
+                        (existing, replacement) -> existing
+                ));
+
+        // 创建目标日期的新任务，过滤已完成SN号
+        LocalDateTime now = LocalDateTime.now();
+        List<EmployeeTask> newTasks = new ArrayList<>();
+        for (EmployeeTask oldTask : sourceTasks) {
+            EmployeeTask newTask = new EmployeeTask();
+            newTask.setEmpId(oldTask.getEmpId());
+            newTask.setEmpName(oldTask.getEmpName());
+            newTask.setEmpTeam(oldTask.getEmpTeam());
+            newTask.setTaskType(oldTask.getTaskType());
+
+            String[] oldSnCodes = getSnCodes(oldTask);
+            String[] newSnCodes = new String[MAX_SN_SLOTS];
+            int index = 0;
+            for (String snCode : oldSnCodes) {
+                if (StrUtil.isNotBlank(snCode)) {
+                    Integer status = snCodeStatusMap.get(snCode);
+                    if (status == null || status == 0 || status == 1) {
+                        newSnCodes[index++] = snCode;
+                    }
+                }
+            }
+
+            setSnCodes(newTask, newSnCodes);
+            newTask.setCreateTime(now);
+            newTask.setUpdateTime(now);
+            newTask.setIsDeleted(0);
+            newTasks.add(newTask);
+        }
+
+        if (!newTasks.isEmpty()) {
+            boolean success = this.saveBatch(newTasks);
+            if (success) {
+                log.info(">>> [复制任务] 成功复制 {} 条记录到 {}", newTasks.size(), targetDate);
+                return newTasks.size();
+            } else {
+                throw new RuntimeException("复制任务数据到 " + targetDate + " 失败");
+            }
+        }
+        return 0;
+    }
+
+    // ==================== 私有工具方法 ====================
 
     private String[] getSnCodes(EmployeeTask task) {
         return new String[]{

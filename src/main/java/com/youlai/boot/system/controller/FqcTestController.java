@@ -1,6 +1,6 @@
 package com.youlai.boot.system.controller;
 
-import com.youlai.boot.common.model.Result;
+import com.youlai.boot.core.web.Result;
 import com.youlai.boot.system.service.EmployeeTaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * FQC任务同步测试控制器
- * 用于手动测试定时任务功能
+ * 用于手动测试定时任务功能（临时接口，生产环境建议删除）
  *
  * @author lijun
  * @since 2026/07/08
@@ -21,30 +21,34 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/fqc/test")
-@Tag(name = "FQC任务同步测试", description = "用于测试定时任务功能")
+@Tag(name = "FQC任务同步测试", description = "用于手动测试定时任务功能")
 public class FqcTestController {
 
     private final EmployeeTaskService employeeTaskService;
 
     /**
      * 手动触发复制昨日任务到今日
-     * 
+     *
      * @return 复制的记录数
      */
     @PostMapping("/copy-yesterday-tasks")
-    @Operation(summary = "手动复制昨日任务到今日", description = "用于测试定时任务功能，生产环境应使用XXL-JOB定时任务")
+    @Operation(summary = "手动复制昨日任务到今日", description = "用于测试定时任务功能，复制昨天创建的员工任务数据到今天，并过滤掉已完成的SN号")
     public Result<Integer> copyYesterdayTasksToToday() {
         log.info("========== [手动触发] 开始复制昨日任务数据 ==========");
-        
+
         try {
             int count = employeeTaskService.copyYesterdayTasksToToday();
-            
+
             log.info("========== [手动触发完成] 成功复制 {} 条记录 ==========", count);
-            
-            return Result.success(count, "成功复制 " + count + " 条员工任务记录");
+
+            Result<Integer> result = Result.success(count);
+            result.setMsg("成功复制 " + count + " 条员工任务记录");
+            return result;
         } catch (Exception e) {
             log.error("========== [手动触发失败] 复制任务数据失败: {} ==========", e.getMessage(), e);
-            return Result.failed("复制失败: " + e.getMessage());
+            Result<Integer> failResult = Result.failed();
+            failResult.setMsg("复制失败：" + e.getMessage());
+            return failResult;
         }
     }
 }

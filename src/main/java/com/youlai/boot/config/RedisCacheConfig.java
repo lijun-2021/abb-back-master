@@ -22,7 +22,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 @EnableCaching
 @EnableConfigurationProperties(CacheProperties.class)
 @Configuration
-@ConditionalOnProperty(name = "spring.cache.enabled") // xxl.job.enabled = true 才会自动装配
+@ConditionalOnProperty(name = "spring.cache.enabled") // spring.cache.enabled = true 才会自动装配
 public class RedisCacheConfig {
 
     /**
@@ -35,7 +35,7 @@ public class RedisCacheConfig {
      * @return {@link RedisCacheManager}
      */
     @Bean
-    public RedisCacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory, CacheProperties cacheProperties){
+    public RedisCacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory, CacheProperties cacheProperties) {
         return RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory))
                 .cacheDefaults(redisCacheConfiguration(cacheProperties))
                 .build();

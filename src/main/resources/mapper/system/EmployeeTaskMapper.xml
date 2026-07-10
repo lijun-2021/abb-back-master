@@ -40,6 +40,8 @@
         LEFT JOIN fqc_attendance_record ar ON et.emp_id = ar.emp_id
         <where>
             et.is_deleted = 0
+            <!-- 只查询当天的任务数据 -->
+            AND DATE(et.create_time) = CURDATE()
             <!-- 员工ID精确查询 -->
             <if test="queryParams.empId != null and queryParams.empId.trim() neq ''">
                 AND emp_id = #{queryParams.empId}
