@@ -15,6 +15,7 @@
         sc.function_endtime AS functionEndtime,
         sc.function_emp_name AS functionEmpName,
         et.emp_team AS empTeam,
+        et.task_date AS taskDate,
         sc.area,
         sc.sn_contract AS snContract,
         sc.certification,
@@ -37,13 +38,23 @@
         NULLIF(cd.l_ncr_Description3, '') AS lNcrDescription3,
         NULLIF(cd.l_ncr_Description4, '') AS lNcrDescription4,
         NULLIF(cd.l_ncr_Description5, '') AS lNcrDescription5,
-        cd.fat,
+        COALESCE(cd.fat, 0) AS fat,
         cd.fatBeginT,
         cd.fatEndT
         FROM
         fqc_switch_cabinet sc
         LEFT JOIN fqc_cabinet_detail cd ON sc.sn_code = cd.sn_code AND cd.is_deleted = 0
-        LEFT JOIN fqc_employee_task et ON sc.function_emp_name = et.emp_name AND et.task_type = 2 AND et.is_deleted = 0
+        LEFT JOIN (
+            SELECT emp_name, emp_team, task_date
+            FROM fqc_employee_task
+            WHERE task_type = 2 AND is_deleted = 0
+              AND (emp_name, task_date) IN (
+                  SELECT emp_name, MAX(task_date)
+                  FROM fqc_employee_task
+                  WHERE task_type = 2 AND is_deleted = 0
+                  GROUP BY emp_name
+              )
+        ) et ON sc.function_emp_name = et.emp_name
         <where>
             sc.is_deleted = 0
             <!-- SN号模糊查询 -->

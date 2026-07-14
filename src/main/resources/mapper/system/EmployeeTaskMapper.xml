@@ -11,7 +11,6 @@
         et.emp_id AS empId,
         et.emp_name AS empName,
         et.emp_team AS empTeam,
-        ar.state AS attendanceState,
         et.task_type AS taskType,
         sn_code1 AS snCode1,
         sn_code2 AS snCode2,
@@ -33,22 +32,27 @@
         sn_code18 AS snCode18,
         sn_code19 AS snCode19,
         sn_code20 AS snCode20,
+        et.task_date AS taskDate,
         et.create_time AS createTime,
         et.update_time AS updateTime
         FROM
         fqc_employee_task et
-        LEFT JOIN fqc_attendance_record ar ON et.emp_id = ar.emp_id
         <where>
             et.is_deleted = 0
-            <!-- 只查询当天的任务数据 -->
-            AND DATE(et.create_time) = CURDATE()
+            <!-- 任务日期筛选：传了taskDate按指定日期查，否则默认查当天 -->
+            <if test="queryParams.taskDate != null">
+                AND et.task_date = #{queryParams.taskDate}
+            </if>
+            <if test="queryParams.taskDate == null">
+                AND et.task_date = CURDATE()
+            </if>
             <!-- 员工ID精确查询 -->
             <if test="queryParams.empId != null and queryParams.empId.trim() neq ''">
                 AND emp_id = #{queryParams.empId}
             </if>
             <!-- 员工姓名模糊查询 -->
             <if test="queryParams.empName != null and queryParams.empName.trim() neq ''">
-                AND emp_name LIKE CONCAT('%', #{queryParams.empName}, '%')
+                AND et.emp_team LIKE CONCAT('%', #{queryParams.empName}, '%')
             </if>
             <!-- 任务类型精确查询 -->
             <if test="queryParams.taskType != null">

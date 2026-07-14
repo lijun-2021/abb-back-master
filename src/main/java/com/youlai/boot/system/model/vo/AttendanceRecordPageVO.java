@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -33,8 +34,15 @@ public class AttendanceRecordPageVO implements Serializable {
     @Schema(description = "员工姓名")
     private String empName;
 
-    @Schema(description = "状态:1-在岗 2-FAT 3-耐压 4-请假 5-离职")
-    private Integer state;
+    @Schema(description = "上午状态:1-在岗 2-FAT 3-耐压 4-请假 5-离职")
+    private Integer amState;
+
+    @Schema(description = "下午状态:1-在岗 2-FAT 3-耐压 4-请假 5-离职")
+    private Integer pmState;
+
+    @Schema(description = "考勤日期")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate recordDate;
 
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

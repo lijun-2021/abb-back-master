@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -50,6 +51,10 @@ public class SwitchCabinetPageVO implements Serializable {
 
     @Schema(description = "功能员工组别(A/B/C/D)")
     private String empTeam;
+
+    @Schema(description = "任务日期(员工最近一次分配该SN的日期)")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate taskDate;
 
     @Schema(description = "检测区域")
     private String area;

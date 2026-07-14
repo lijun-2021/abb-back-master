@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDate;
+
 /**
  * 员工任务分页查询对象
  *
@@ -30,4 +32,7 @@ public class EmployeeTaskPageQuery extends BasePageQuery {
 
     @Schema(description = "分配SN号(模糊查询)")
     private String snCode;
+
+    @Schema(description = "任务日期(不传默认当天)")
+    private LocalDate taskDate;
 }

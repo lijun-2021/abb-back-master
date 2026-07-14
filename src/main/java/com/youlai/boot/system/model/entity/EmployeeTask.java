@@ -5,6 +5,8 @@ import com.youlai.boot.common.base.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 /**
  * 员工任务分配实体
  *
@@ -65,4 +67,9 @@ public class EmployeeTask extends BaseEntity {
      * 是否删除 0-未删除 1-已删除
      */
     private Integer isDeleted;
+
+    /**
+     * 任务日期
+     */
+    private LocalDate taskDate;
 }

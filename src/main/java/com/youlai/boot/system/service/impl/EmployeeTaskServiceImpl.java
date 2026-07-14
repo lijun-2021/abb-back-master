@@ -63,8 +63,11 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
     public void assignSnCodeToEmployee(String empId, String empName, String snCode) {
         log.info("========== [独占分配] 开始分配SN号: {} 给员工: {} (ID:{}) ==========", snCode, empName, empId);
 
-        // 1. 查询所有员工的任务，清理该 SN 号在其他员工处的分配
+        LocalDate today = LocalDate.now();
+
+        // 1. 查询当天所有员工的任务，清理该 SN 号在其他员工处的分配
         List<EmployeeTask> allEmployeeTasks = this.list(new LambdaQueryWrapper<EmployeeTask>()
+                .eq(EmployeeTask::getTaskDate, today)
                 .eq(EmployeeTask::getIsDeleted, 0)
         );
 
@@ -83,6 +86,7 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
         // 2. 处理目标员工（新员工）的任务分配
         EmployeeTask employeeTask = this.getOne(new LambdaQueryWrapper<EmployeeTask>()
                 .eq(EmployeeTask::getEmpId, empId)
+                .eq(EmployeeTask::getTaskDate, today)
                 .eq(EmployeeTask::getIsDeleted, 0)
         );
 
@@ -91,6 +95,7 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
             employeeTask.setEmpId(empId);
             employeeTask.setEmpName(empName);
             employeeTask.setTaskType(2);
+            employeeTask.setTaskDate(today);
             employeeTask.setSnCode1(snCode);
             this.save(employeeTask);
             log.info(">>> [独占分配-新建] 为员工 {} (ID:{}) 创建新记录，分配SN号到 sn_code1: {}", empName, empId, snCode);
@@ -114,8 +119,10 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeSnCodeFromEmployee(String empId, String snCode) {
+        LocalDate today = LocalDate.now();
         EmployeeTask employeeTask = this.getOne(new LambdaQueryWrapper<EmployeeTask>()
                 .eq(EmployeeTask::getEmpId, empId)
+                .eq(EmployeeTask::getTaskDate, today)
                 .eq(EmployeeTask::getIsDeleted, 0)
         );
 
@@ -144,7 +151,7 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
     /**
      * 检测并补充缺失天数的任务数据
      * 应用启动时自动调用，处理因关机/停电等原因导致的定时任务未执行问题
-     * 会从最近有数据的日期开始，逐天复制到今天
+     * 会从最近有数据的日期开始，逐天复制到今天，保留每一天的任务记录
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -152,17 +159,17 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
         log.info("========== [启动检查] 开始检测缺失天数的任务数据 ==========");
         LocalDate today = LocalDate.now();
 
-        // 1. 查询数据库中最近有任务数据的日期
+        // 1. 查询数据库中最近有任务数据的日期（按 task_date）
         List<EmployeeTask> latestTasks = this.list(new LambdaQueryWrapper<EmployeeTask>()
                 .eq(EmployeeTask::getIsDeleted, 0)
-                .orderByDesc(EmployeeTask::getCreateTime)
+                .orderByDesc(EmployeeTask::getTaskDate)
                 .last("LIMIT 1")
         );
         if (latestTasks.isEmpty()) {
             log.info(">>> [启动检查] 数据库中无任何任务数据，跳过");
             return 0;
         }
-        LocalDate latestDate = latestTasks.get(0).getCreateTime().toLocalDate();
+        LocalDate latestDate = latestTasks.get(0).getTaskDate();
         log.info(">>> [启动检查] 数据库中最新任务数据日期: {}", latestDate);
 
         // 2. 今天数据已存在，无需补充
@@ -178,7 +185,7 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
             return copyTasksFromDateToDate(yesterday, today);
         }
 
-        // 4. 存在多天缺失，逐天补充
+        // 4. 存在多天缺失，逐天补充（保留每一天的数据）
         LocalDate startDate = latestDate.plusDays(1);
         int totalCopied = 0;
         log.info(">>> [启动检查] 发现缺失天数: {} 天 (从 {} 到 {}), 开始逐天补充",
@@ -197,16 +204,14 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
 
     /**
      * 核心复制逻辑：从源日期的任务数据复制到目标日期，过滤已完成的SN号
+     * 按 task_date 字段查询源数据，新记录的 task_date 设为目标日期
      */
-    @Transactional(rollbackFor = Exception.class)
     private int copyTasksFromDateToDate(LocalDate sourceDate, LocalDate targetDate) {
         log.info(">>> [复制任务] 从 {} 复制到 {}", sourceDate, targetDate);
-        LocalDateTime sourceStart = sourceDate.atStartOfDay();
-        LocalDateTime sourceEnd = sourceDate.plusDays(1).atStartOfDay();
 
+        // 按 task_date 查询源日期的任务数据
         List<EmployeeTask> sourceTasks = this.list(new LambdaQueryWrapper<EmployeeTask>()
-                .ge(EmployeeTask::getCreateTime, sourceStart)
-                .lt(EmployeeTask::getCreateTime, sourceEnd)
+                .eq(EmployeeTask::getTaskDate, sourceDate)
                 .eq(EmployeeTask::getIsDeleted, 0)
         );
         if (sourceTasks.isEmpty()) {
@@ -251,6 +256,7 @@ public class EmployeeTaskServiceImpl extends ServiceImpl<EmployeeTaskMapper, Emp
             }
 
             setSnCodes(newTask, newSnCodes);
+            newTask.setTaskDate(targetDate);
             newTask.setCreateTime(now);
             newTask.setUpdateTime(now);
             newTask.setIsDeleted(0);

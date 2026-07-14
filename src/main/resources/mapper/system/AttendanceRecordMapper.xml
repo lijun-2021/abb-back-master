@@ -11,30 +11,34 @@
         emp_id AS empId,
         emp_team AS empTeam,
         emp_name AS empName,
-        state,
+        am_state AS amState,
+        pm_state AS pmState,
+        record_date AS recordDate,
         create_time AS createTime,
         update_time AS updateTime
         FROM
         fqc_attendance_record
         <where>
-            <!-- 员工ID精确查询 -->
             <if test="queryParams.empId != null and queryParams.empId.trim() neq ''">
                 AND emp_id = #{queryParams.empId}
             </if>
-            <!-- 员工姓名模糊查询 -->
             <if test="queryParams.empName != null and queryParams.empName.trim() neq ''">
                 AND emp_name LIKE CONCAT('%', #{queryParams.empName}, '%')
             </if>
-            <!-- 组别精确查询 -->
             <if test="queryParams.empTeam != null and queryParams.empTeam.trim() neq ''">
                 AND emp_team = #{queryParams.empTeam}
             </if>
-            <!-- 状态精确查询 -->
-            <if test="queryParams.state != null">
-                AND state = #{queryParams.state}
+            <if test="queryParams.amState != null">
+                AND am_state = #{queryParams.amState}
+            </if>
+            <if test="queryParams.pmState != null">
+                AND pm_state = #{queryParams.pmState}
+            </if>
+            <if test="queryParams.recordDate != null">
+                AND record_date = #{queryParams.recordDate}
             </if>
         </where>
-        ORDER BY emp_team ASC, emp_name ASC
+        ORDER BY record_date DESC, emp_team ASC, emp_name ASC
     </select>
 
 </mapper>

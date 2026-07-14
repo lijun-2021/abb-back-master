@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -32,9 +33,6 @@ public class EmployeeTaskPageVO implements Serializable {
 
     @Schema(description = "组别(A/B/C/D)")
     private String empTeam;
-
-    @Schema(description = "员工考勤状态:1-在岗 2-FAT 3-耐压 4-请假 5-离职")
-    private Integer attendanceState;
 
     @Schema(description = "任务类型:1-耐压,2-功能")
     private Integer taskType;
@@ -79,6 +77,10 @@ public class EmployeeTaskPageVO implements Serializable {
     private String snCode19;
     @Schema(description = "分配SN20号")
     private String snCode20;
+
+    @Schema(description = "任务日期")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate taskDate;
 
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

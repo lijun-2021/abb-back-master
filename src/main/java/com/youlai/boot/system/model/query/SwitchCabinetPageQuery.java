@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+//import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -45,6 +46,9 @@ public class SwitchCabinetPageQuery extends BasePageQuery {
 
     @Schema(description = "功能检测状态(0-未完成,1-进行中,2-已完成)")
     private Integer functionStatus;
+
+//    @Schema(description = "任务日期(按当天分配的SN查询，不传默认当天)")
+//    private LocalDate taskDate;
 
 //    /**
 //     * 是否超级管理员（用于数据权限控制）

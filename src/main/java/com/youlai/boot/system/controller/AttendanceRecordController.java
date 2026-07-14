@@ -39,6 +39,16 @@ public class AttendanceRecordController {
         return PageResult.success(result);
     }
 
+    @Operation(summary = "员工考勤记录分页列表(兼容前端根路径请求)")
+    @GetMapping
+    @Log(value = "员工考勤记录分页列表", module = LogModuleEnum.OTHER)
+    public PageResult<AttendanceRecordPageVO> getAttendanceRecordPageRoot(
+            @Valid AttendanceRecordPageQuery queryParams
+    ) {
+        IPage<AttendanceRecordPageVO> result = attendanceRecordService.getAttendanceRecordPage(queryParams);
+        return PageResult.success(result);
+    }
+
     @Operation(summary = "更新员工考勤状态（支持单条和批量）")
     @PatchMapping("/state")
     @Log(value = "更新员工考勤状态", module = LogModuleEnum.OTHER)

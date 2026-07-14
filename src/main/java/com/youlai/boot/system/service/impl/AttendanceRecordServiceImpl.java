@@ -10,9 +10,12 @@ import com.youlai.boot.system.model.query.AttendanceRecordPageQuery;
 import com.youlai.boot.system.model.vo.AttendanceRecordPageVO;
 import com.youlai.boot.system.service.AttendanceRecordService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordMapper, AttendanceRecord> implements AttendanceRecordService {
 
     /**
@@ -48,97 +52,206 @@ public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordMap
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateAttendanceState(AttendanceRecordForm form) {
-        // 判断是单条更新还是批量更新
         if (form.getItems() != null && !form.getItems().isEmpty()) {
-            // 批量更新
             return batchUpdateAttendanceState(form.getItems());
         } else {
-            // 单条更新
-            return singleUpdateAttendanceState(form.getEmpId(), form.getState());
+            return singleUpdateAttendanceState(form.getEmpId(), form.getAmState(), form.getPmState(), form.getRecordDate());
         }
     }
 
-    /**
-     * 单条更新员工考勤状态
-     *
-     * @param empId 员工ID
-     * @param state 状态值
-     * @return 是否成功
-     */
-    private boolean singleUpdateAttendanceState(String empId, Integer state) {
-        // 验证参数
+    private boolean singleUpdateAttendanceState(String empId, Integer amState, Integer pmState, LocalDate recordDate) {
         if (empId == null || empId.trim().isEmpty()) {
             throw new IllegalArgumentException("员工ID不能为空");
         }
-        validateState(state);
 
-        // 根据empId查询现有记录
+        if (recordDate == null) {
+            recordDate = LocalDate.now();
+        }
+
+        if (amState != null) {
+            validateState(amState);
+        }
+        if (pmState != null) {
+            validateState(pmState);
+        }
+
         AttendanceRecord existingRecord = this.lambdaQuery()
                 .eq(AttendanceRecord::getEmpId, empId)
+                .eq(AttendanceRecord::getRecordDate, recordDate)
                 .one();
 
         if (existingRecord == null) {
-            throw new IllegalArgumentException("未找到员工ID为 " + empId + " 的考勤记录");
+            existingRecord = new AttendanceRecord();
+            existingRecord.setEmpId(empId);
+            existingRecord.setRecordDate(recordDate);
         }
 
-        // 仅更新state字段
-        existingRecord.setState(state);
-        return this.updateById(existingRecord);
+        if (amState != null) {
+            existingRecord.setAmState(amState);
+        }
+        if (pmState != null) {
+            existingRecord.setPmState(pmState);
+        }
+
+        return existingRecord.getId() == null ? this.save(existingRecord) : this.updateById(existingRecord);
     }
 
-    /**
-     * 批量更新员工考勤状态
-     *
-     * @param items 员工状态列表
-     * @return 是否成功
-     */
     private boolean batchUpdateAttendanceState(List<AttendanceRecordForm.AttendanceStateItem> items) {
-        // 验证所有项的状态值合法性
         for (AttendanceRecordForm.AttendanceStateItem item : items) {
-            validateState(item.getState());
+            if (item.getAmState() != null) {
+                validateState(item.getAmState());
+            }
+            if (item.getPmState() != null) {
+                validateState(item.getPmState());
+            }
         }
 
-        // 提取所有员工ID
         List<String> empIds = items.stream()
                 .map(AttendanceRecordForm.AttendanceStateItem::getEmpId)
                 .collect(Collectors.toList());
 
-        // 批量查询现有记录
+        LocalDate today = LocalDate.now();
+
         List<AttendanceRecord> existingRecords = this.lambdaQuery()
                 .in(AttendanceRecord::getEmpId, empIds)
                 .list();
 
-        // 构建 empId -> AttendanceRecord 的映射
         Map<String, AttendanceRecord> recordMap = existingRecords.stream()
-                .collect(Collectors.toMap(AttendanceRecord::getEmpId, record -> record));
+                .collect(Collectors.toMap(
+                        record -> record.getEmpId() + "_" + record.getRecordDate(),
+                        record -> record,
+                        (existing, replacement) -> existing
+                ));
 
-        // 检查是否有不存在的员工
-        for (String empId : empIds) {
-            if (!recordMap.containsKey(empId)) {
-                throw new IllegalArgumentException("未找到员工ID为 " + empId + " 的考勤记录");
-            }
-        }
-
-        // 批量更新状态
         List<AttendanceRecord> recordsToUpdate = items.stream()
                 .map(item -> {
-                    AttendanceRecord record = recordMap.get(item.getEmpId());
-                    record.setState(item.getState());
+                    LocalDate recordDate = item.getRecordDate() != null ? item.getRecordDate() : today;
+                    String key = item.getEmpId() + "_" + recordDate;
+                    AttendanceRecord record = recordMap.get(key);
+
+                    if (record == null) {
+                        record = new AttendanceRecord();
+                        record.setEmpId(item.getEmpId());
+                        record.setRecordDate(recordDate);
+                    }
+
+                    if (item.getAmState() != null) {
+                        record.setAmState(item.getAmState());
+                    }
+                    if (item.getPmState() != null) {
+                        record.setPmState(item.getPmState());
+                    }
+
                     return record;
                 })
                 .collect(Collectors.toList());
 
-        return this.updateBatchById(recordsToUpdate);
+        List<AttendanceRecord> updateRecords = recordsToUpdate.stream()
+                .filter(record -> record.getId() != null)
+                .collect(Collectors.toList());
+
+        List<AttendanceRecord> insertRecords = recordsToUpdate.stream()
+                .filter(record -> record.getId() == null)
+                .collect(Collectors.toList());
+
+        boolean updateSuccess = updateRecords.isEmpty() || this.updateBatchById(updateRecords);
+        boolean insertSuccess = insertRecords.isEmpty() || this.saveBatch(insertRecords);
+
+        return updateSuccess && insertSuccess;
     }
 
-    /**
-     * 验证状态值合法性
-     *
-     * @param state 状态值
-     */
     private void validateState(Integer state) {
         if (state == null || state < 1 || state > 5) {
             throw new IllegalArgumentException("无效的状态值，应为1-5之间");
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int fillMissingDaysAttendance() {
+        log.info("========== [启动检查] 开始检测缺失天数的考勤数据 ==========");
+        LocalDate today = LocalDate.now();
+        log.info(">>> [启动检查] 当前日期: {}", today);
+
+        List<AttendanceRecord> latestRecords = this.list(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AttendanceRecord>()
+                .orderByDesc(AttendanceRecord::getRecordDate)
+                .last("LIMIT 1")
+        );
+        log.info(">>> [启动检查] 查询到最新记录数量: {}", latestRecords.size());
+        if (latestRecords.isEmpty()) {
+            log.info(">>> [启动检查] 数据库中无任何考勤数据，跳过");
+            return 0;
+        }
+        LocalDate latestDate = latestRecords.get(0).getRecordDate();
+        log.info(">>> [启动检查] 数据库中最新考勤数据日期: {}", latestDate);
+
+        if (latestDate.equals(today)) {
+            log.info(">>> [启动检查] 今日考勤数据已存在，无需补充");
+            return 0;
+        }
+
+        LocalDate yesterday = today.minusDays(1);
+        if (latestDate.equals(yesterday)) {
+            log.info(">>> [启动检查] 最新数据是昨天，执行正常的今日复制");
+            return copyAttendanceFromDateToDate(yesterday, today);
+        }
+
+        LocalDate startDate = latestDate.plusDays(1);
+        int totalCopied = 0;
+        log.info(">>> [启动检查] 发现缺失天数: {} 天 (从 {} 到 {}), 开始逐天补充",
+                java.time.temporal.ChronoUnit.DAYS.between(startDate, today) + 1, startDate, today);
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(today)) {
+            LocalDate sourceDate = currentDate.minusDays(1);
+            int copied = copyAttendanceFromDateToDate(sourceDate, currentDate);
+            totalCopied += copied;
+            log.info(">>> [启动检查] 补充 {} 的考勤: 复制了 {} 条记录", currentDate, copied);
+            currentDate = currentDate.plusDays(1);
+        }
+        log.info("========== [启动检查完成] 共补充 {} 条考勤记录 ==========", totalCopied);
+        return totalCopied;
+    }
+
+    private int copyAttendanceFromDateToDate(LocalDate sourceDate, LocalDate targetDate) {
+        log.info(">>> [复制考勤] 从 {} 复制到 {}", sourceDate, targetDate);
+
+        try {
+            List<AttendanceRecord> sourceRecords = this.list(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AttendanceRecord>()
+                    .eq(AttendanceRecord::getRecordDate, sourceDate)
+            );
+            log.info(">>> [复制考勤] 查询到源数据数量: {}", sourceRecords.size());
+            
+            if (sourceRecords.isEmpty()) {
+                log.info(">>> [复制考勤] {} 无考勤数据，跳过", sourceDate);
+                return 0;
+            }
+
+            List<AttendanceRecord> newRecords = new ArrayList<>();
+            for (AttendanceRecord oldRecord : sourceRecords) {
+                AttendanceRecord newRecord = new AttendanceRecord();
+                newRecord.setEmpId(oldRecord.getEmpId());
+                newRecord.setEmpName(oldRecord.getEmpName());
+                newRecord.setEmpTeam(oldRecord.getEmpTeam());
+                newRecord.setRecordDate(targetDate);
+                newRecords.add(newRecord);
+            }
+
+            log.info(">>> [复制考勤] 准备插入 {} 条新记录", newRecords.size());
+            if (!newRecords.isEmpty()) {
+                boolean success = this.saveBatch(newRecords);
+                if (success) {
+                    log.info(">>> [复制考勤] 成功复制 {} 条记录到 {}", newRecords.size(), targetDate);
+                    return newRecords.size();
+                } else {
+                    throw new RuntimeException("saveBatch返回false，复制考勤数据到 " + targetDate + " 失败");
+                }
+            }
+        } catch (Exception e) {
+            log.error(">>> [复制考勤] 复制失败 - 异常类型: {}", e.getClass().getName());
+            log.error(">>> [复制考勤] 复制失败 - 异常消息: {}", e.getMessage());
+            log.error(">>> [复制考勤] 复制失败 - 异常堆栈:", e);
+            throw e;
+        }
+        return 0;
     }
 }

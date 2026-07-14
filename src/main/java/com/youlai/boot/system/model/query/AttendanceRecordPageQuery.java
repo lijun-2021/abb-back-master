@@ -5,12 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-/**
- * 员工考勤记录分页查询对象
- *
- * @author lijun
- * @since 2026/07/06
- */
+import java.time.LocalDate;
+
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Schema(description = "员工考勤记录分页查询对象")
@@ -25,6 +21,12 @@ public class AttendanceRecordPageQuery extends BasePageQuery {
     @Schema(description = "组别(A/B/C/D)")
     private String empTeam;
 
-    @Schema(description = "状态:1-在岗 2-FAT 3-耐压 4-请假 5-离职")
-    private Integer state;
+    @Schema(description = "上午状态:1-在岗 2-FAT 3-耐压 4-请假 5-离职")
+    private Integer amState;
+
+    @Schema(description = "下午状态:1-在岗 2-FAT 3-耐压 4-请假 5-离职")
+    private Integer pmState;
+
+    @Schema(description = "考勤日期，不传默认查询当天")
+    private LocalDate recordDate = LocalDate.now();
 }
