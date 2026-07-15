@@ -34,6 +34,12 @@ public class EmployeeTaskPageVO implements Serializable {
     @Schema(description = "组别(A/B/C/D)")
     private String empTeam;
 
+    @Schema(description = "上午状态:1-在岗 2-FAT 3-耐压 4-请假 5-离职")
+    private Integer amState;
+
+    @Schema(description = "下午状态:1-在岗 2-FAT 3-耐压 4-请假 5-离职")
+    private Integer pmState;
+
     @Schema(description = "任务类型:1-耐压,2-功能")
     private Integer taskType;
 
