@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youlai.boot.system.mapper.AlgorithmSimulMapper">
+
+    <select id="getAlgorithmSimulPage" resultType="com.youlai.boot.system.model.vo.AlgorithmSimulPageVO">
+        SELECT
+            id,
+            line,
+            rowId,
+            voltageZone,
+            worker,
+            functionZone,
+            inspector,
+            functionMinutes
+        FROM
+            fqc_algorithm_simul
+        <where>
+            <if test="queryParams.line != null and queryParams.line.trim() neq ''">
+                AND line LIKE CONCAT('%', #{queryParams.line}, '%')
+            </if>
+            <if test="queryParams.rowId != null and queryParams.rowId.trim() neq ''">
+                AND rowId LIKE CONCAT('%', #{queryParams.rowId}, '%')
+            </if>
+            <if test="queryParams.voltageZone != null and queryParams.voltageZone.trim() neq ''">
+                AND voltageZone LIKE CONCAT('%', #{queryParams.voltageZone}, '%')
+            </if>
+            <if test="queryParams.worker != null">
+                AND worker = #{queryParams.worker}
+            </if>
+            <if test="queryParams.functionZone != null and queryParams.functionZone.trim() neq ''">
+                AND functionZone LIKE CONCAT('%', #{queryParams.functionZone}, '%')
+            </if>
+            <if test="queryParams.inspector != null and queryParams.inspector.trim() neq ''">
+                AND inspector LIKE CONCAT('%', #{queryParams.inspector}, '%')
+            </if>
+        </where>
+        ORDER BY id ASC
+    </select>
+
+</mapper>

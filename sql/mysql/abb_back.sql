@@ -36,6 +36,21 @@ CREATE TABLE `abb_algorithm_result`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '算法数据' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Table structure for fqc_algorithm_simul
+-- ----------------------------
+CREATE TABLE `fqc_algorithm_simul` (
+                                       `id` int NOT NULL COMMENT '记录ID',
+                                       `line` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '产线名称',
+                                       `rowId` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '工位行ID',
+                                       `voltageZone` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '电压区域',
+                                       `worker` int NOT NULL COMMENT '作业人员编号',
+                                       `functionZone` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '功能区域',
+                                       `inspector` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '检验员编号',
+                                       `functionMinutes` int DEFAULT NULL COMMENT '工序时长(分钟)',
+                                       PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='FQC调度仿真结果表';
+
+-- ----------------------------
 -- Table structure for abb_daily_resource_status
 -- ----------------------------
 DROP TABLE IF EXISTS `abb_daily_resource_status`;
