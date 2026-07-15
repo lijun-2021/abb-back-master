@@ -88,7 +88,7 @@
             </if>
             <!-- 组别精确查询 -->
             <if test="queryParams.empTeam != null and queryParams.empTeam.trim() neq ''">
-                AND emp_team = #{queryParams.empTeam}
+                AND et.emp_team = #{queryParams.empTeam}
             </if>
         </where>
         <!-- 优先级： 先按更新时间→再按任务类型排序 → 后按任务序号 -->
