@@ -47,7 +47,7 @@ public class SwitchCabinetController {
 
     @Operation(summary = "开关柜指派员工")
     @PatchMapping("/batch-update")
-    @PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:edit')")
+    //@PreAuthorize("@ss.hasPerm('fqc:switch-cabinet:edit')")
     @Log(value = "开关柜指派员工", module = LogModuleEnum.OTHER)
     public Result<Void> updateSwitchCabinets(
             @RequestBody @Valid SwitchCabinetForm batchForm

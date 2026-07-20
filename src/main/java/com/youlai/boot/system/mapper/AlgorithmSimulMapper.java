@@ -21,7 +21,7 @@ public interface AlgorithmSimulMapper extends com.baomidou.mybatisplus.core.mapp
      * 获取FQC算法模拟数据分页列表
      *
      * @param page        分页参数
-     * @param queryParams 查询参数（支持产线、工位行ID、电压区域等模糊查询）
+     * @param queryParams 查询参数（支持产线、合同名称、耐压区域等模糊查询）
      * @return 分页数据结果
      */
     IPage<AlgorithmSimulPageVO> getAlgorithmSimulPage(Page<AlgorithmSimulPageVO> page, AlgorithmSimulPageQuery queryParams);

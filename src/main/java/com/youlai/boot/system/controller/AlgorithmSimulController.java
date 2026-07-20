@@ -34,10 +34,10 @@ public class AlgorithmSimulController {
 
     /**
      * 获取FQC算法模拟数据分页列表
-     * 支持产线、工位行ID、电压区域、作业人员、功能区域、检验员等模糊查询
+     * 支持产线、合同名称、耐压区域、作业人员、功能区域、检验员等模糊查询
      * 不传查询参数时默认返回所有数据
      *
-     * @param queryParams 查询参数（支持产线、工位行ID、电压区域等模糊查询）
+     * @param queryParams 查询参数（支持产线、合同名称、耐压区域等模糊查询）
      * @return 分页数据结果
      */
     @Operation(summary = "FQC算法模拟数据分页列表")

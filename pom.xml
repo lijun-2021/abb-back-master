@@ -300,6 +300,19 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <excludes>
+                        <!-- 只排除application相关的配置文件 -->
+                        <exclude>**/application.yml</exclude>
+                        <exclude>**/application-dev.yml</exclude>
+                        <exclude>**/application-prod.yml</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

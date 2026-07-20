@@ -30,12 +30,12 @@ public class AlgorithmSimul {
     private String line;
 
     /**
-     * 工位行ID
+     * 合同名称
      */
     private String rowId;
 
     /**
-     * 电压区域
+     * 耐压区域
      */
     private String voltageZone;
 
