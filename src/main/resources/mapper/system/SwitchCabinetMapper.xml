@@ -114,6 +114,16 @@
                     AND sc.offline_time &lt;= #{endDate}
                 </if>
             </if>
+            <!-- 功能检查开始时间查询 -->
+            <if test="queryParams.functionStarttime != null and queryParams.functionStarttime.trim() neq ''">
+                <bind name="functionStartTime" value="queryParams.functionStarttime.length() == 10 ? queryParams.functionStarttime + ' 00:00:00' : queryParams.functionStarttime"/>
+                AND sc.function_starttime &gt;= #{functionStartTime}
+            </if>
+            <!-- 功能检查结束时间查询 -->
+            <if test="queryParams.functionEndtime != null and queryParams.functionEndtime.trim() neq ''">
+                <bind name="functionEndTime" value="queryParams.functionEndtime.length() == 10 ? queryParams.functionEndtime + ' 23:59:59' : queryParams.functionEndtime"/>
+                AND sc.function_endtime &lt;= #{functionEndTime}
+            </if>
         </where>
         ORDER BY
             functionStatus ASC,

@@ -47,6 +47,12 @@ public class SwitchCabinetPageQuery extends BasePageQuery {
     @Schema(description = "功能检测状态(0-未完成,1-进行中,2-已完成)")
     private Integer functionStatus;
 
+    @Schema(description = "功能检查开始时间")
+    private String functionStarttime;
+
+    @Schema(description = "功能检查结束时间")
+    private String functionEndtime;
+
 //    @Schema(description = "任务日期(按当天分配的SN查询，不传默认当天)")
 //    private LocalDate taskDate;
 
