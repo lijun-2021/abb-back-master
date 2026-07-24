@@ -233,6 +233,9 @@ public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordMap
                 newRecord.setEmpName(oldRecord.getEmpName());
                 newRecord.setEmpTeam(oldRecord.getEmpTeam());
                 newRecord.setRecordDate(targetDate);
+                // 默认全天在岗：上午状态和下午状态都设为1
+                newRecord.setAmState(1);
+                newRecord.setPmState(1);
                 newRecords.add(newRecord);
             }
 
