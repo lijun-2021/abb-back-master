@@ -125,9 +125,22 @@
                 AND sc.function_endtime &lt;= #{functionEndTime}
             </if>
         </where>
-        ORDER BY
-            functionStatus ASC,
-            offlineTime ASC
+        <!-- 动态排序：根据前端传入的sortField和sortOrder进行排序，默认按offlineTime降序 -->
+        <choose>
+            <when test="queryParams.sortField != null and queryParams.sortField == 'offlineTime'">
+                <choose>
+                    <when test="queryParams.sortOrder != null and queryParams.sortOrder == 'asc'">
+                        ORDER BY functionStatus ASC, sc.offline_time ASC
+                    </when>
+                    <otherwise>
+                        ORDER BY functionStatus ASC, sc.offline_time DESC
+                    </otherwise>
+                </choose>
+            </when>
+            <otherwise>
+                ORDER BY functionStatus ASC, sc.offline_time DESC
+            </otherwise>
+        </choose>
     </select>
 
 

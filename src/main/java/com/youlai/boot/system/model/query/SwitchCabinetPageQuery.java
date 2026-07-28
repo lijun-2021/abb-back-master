@@ -53,6 +53,12 @@ public class SwitchCabinetPageQuery extends BasePageQuery {
     @Schema(description = "功能检查结束时间")
     private String functionEndtime;
 
+    @Schema(description = "排序字段(支持offlineTime)，默认offlineTime")
+    private String sortField = "offlineTime";
+
+    @Schema(description = "排序方式(asc-升序, desc-降序)")
+    private String sortOrder;
+
 //    @Schema(description = "任务日期(按当天分配的SN查询，不传默认当天)")
 //    private LocalDate taskDate;
 
