@@ -25,7 +25,7 @@ public class DisplayServiceImpl extends ServiceImpl<DisplayMapper, Display> impl
 
     /**
      * 获取开关柜数量展示分页列表
-     *
+     *git
      * @param queryParams 查询参数
      * @return 开关柜数量展示分页列表
      */

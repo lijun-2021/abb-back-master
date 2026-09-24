@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.youlai.boot.system.mapper.FunctionOutputMapper">
+
+    <select id="getEmployeeStats"
+            resultType="com.youlai.boot.system.model.vo.FunctionOutputEmployeeVO">
+        <![CDATA[
+        WITH RECURSIVE slot_numbers AS (
+            SELECT 1 AS slot_no
+            UNION ALL
+            SELECT slot_no + 1
+            FROM slot_numbers
+            WHERE slot_no < 20
+        ),
+        attendance AS (
+            SELECT emp_id,
+                   MAX(emp_name) AS emp_name,
+                   MAX(emp_team) AS emp_team,
+                   SUM(COALESCE(finish_data, 0)) AS completed_count
+            FROM fqc_attendance_record
+            WHERE record_date = #{statDate}
+              AND is_deleted = 0
+              AND emp_team IN ('A', 'B', 'C', 'D')
+              AND (#{empName} IS NULL OR emp_name LIKE CONCAT('%', #{empName}, '%'))
+              AND (#{empTeam} IS NULL OR emp_team = #{empTeam})
+            GROUP BY emp_id
+        ),
+        task_slots AS (
+            SELECT et.emp_id,
+                   et.emp_name,
+                   et.emp_team,
+                   TRIM(ELT(
+                       slot_numbers.slot_no,
+                       et.sn_code1, et.sn_code2, et.sn_code3, et.sn_code4, et.sn_code5,
+                       et.sn_code6, et.sn_code7, et.sn_code8, et.sn_code9, et.sn_code10,
+                       et.sn_code11, et.sn_code12, et.sn_code13, et.sn_code14, et.sn_code15,
+                       et.sn_code16, et.sn_code17, et.sn_code18, et.sn_code19, et.sn_code20
+                   )) AS sn_code
+            FROM fqc_employee_task et
+            CROSS JOIN slot_numbers
+            WHERE et.task_date = #{statDate}
+              AND et.task_type = 2
+              AND et.is_deleted = 0
+              AND et.emp_team IN ('A', 'B', 'C', 'D')
+              AND (#{empName} IS NULL OR et.emp_name LIKE CONCAT('%', #{empName}, '%'))
+              AND (#{empTeam} IS NULL OR et.emp_team = #{empTeam})
+        ),
+        task_sns AS (
+            SELECT emp_id, emp_name, emp_team, sn_code
+            FROM task_slots
+            WHERE sn_code IS NOT NULL
+              AND sn_code != ''
+        ),
+        task_stats AS (
+            SELECT ts.emp_id,
+                   MAX(ts.emp_name) AS emp_name,
+                   MAX(ts.emp_team) AS emp_team,
+                   COUNT(*) AS assigned_count,
+                   SUM(CASE
+                           WHEN sc.sn_code IS NULL OR sc.function_endtime IS NULL THEN 1
+                           ELSE 0
+                       END) AS incomplete_count
+            FROM task_sns ts
+            LEFT JOIN fqc_switch_cabinet sc
+                   ON sc.sn_code = ts.sn_code AND sc.is_deleted = 0
+            GROUP BY ts.emp_id
+        ),
+        employee_base AS (
+            SELECT emp_id FROM attendance
+            UNION
+            SELECT emp_id FROM task_stats
+        )
+        SELECT base.emp_id AS empId,
+               COALESCE(tasks.emp_name, attendance.emp_name) AS empName,
+               COALESCE(tasks.emp_team, attendance.emp_team) AS empTeam,
+               COALESCE(tasks.assigned_count, 0) AS assignedCount,
+               COALESCE(attendance.completed_count, 0) AS completedCount,
+               COALESCE(tasks.incomplete_count, 0) AS incompleteCount
+        FROM employee_base base
+        LEFT JOIN attendance ON attendance.emp_id = base.emp_id
+        LEFT JOIN task_stats tasks ON tasks.emp_id = base.emp_id
+        ORDER BY base.emp_id
+        ]]>
+    </select>
+
+</mapper>

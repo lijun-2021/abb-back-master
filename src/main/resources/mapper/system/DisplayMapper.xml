@@ -7,16 +7,22 @@
     <!-- 开关柜数据展示分页列表查询 -->
     <select id="getDisplayPage" resultType="com.youlai.boot.system.model.vo.DisplayPageVO">
         SELECT
-        id,
-        fqc_daily_input AS fqcDailyInput,
-        fqc_daily_output AS fqcDailyOutput,
-        fqc_quantity_instock AS fqcQuantityInstock,
-        fqc_withstand_undistributed AS fqcWithstandUndistributed,
-        fqc_function_undistributed AS fqcFunctionUndistributed,
-        (fqc_daily_input - IFNULL(fqc_withstand_undistributed, 0)) AS fqcAllocated,
-        (fqc_daily_output + IFNULL(fqc_function_undistributed, 0)) AS fqcFunctionalTestOutput,
         DATE(create_time) AS createTime,
-        DATE(update_time) AS updateTime
+        IFNULL(fqc_quantity_instock, 0) AS uncheckedTotal,
+        IFNULL(fqc_daily_input, 0) AS fqcDailyInput,
+        COALESCE((
+            SELECT SUM(COALESCE(ar.finish_data, 0))
+            FROM fqc_attendance_record ar
+            WHERE ar.record_date = DATE(fqc_display.create_time)
+              AND ar.is_deleted = 0
+              AND ar.emp_team &lt;&gt; 'HV'
+        ), 0) AS fqcFunctionTestOutput,
+        IFNULL(fqc_function_undistributed, 0) AS uncertifiedTotal,
+        IFNULL(fqc_daily_output, 0) AS fqcDailyOutput,
+        IFNULL(fqc_withstand_undistributed, 0) AS fqcWithstandUndistributed,
+        GREATEST(IFNULL(fqc_daily_input, 0)
+            - IFNULL(fqc_withstand_undistributed, 0),0) AS fqcAllocated,
+        update_time AS updateTime
         FROM
         fqc_display
         <where>
@@ -27,8 +33,8 @@
                 fqc_daily_input LIKE CONCAT('%', #{queryParams.keywords}, '%')
                 OR fqc_daily_output LIKE CONCAT('%', #{queryParams.keywords}, '%')
                 OR fqc_quantity_instock LIKE CONCAT('%', #{queryParams.keywords}, '%')
-                OR fqc_withstand_undistribited LIKE CONCAT('%', #{queryParams.keywords}, '%')
-                OR fqc_function_undistribited LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR fqc_withstand_undistributed LIKE CONCAT('%', #{queryParams.keywords}, '%')
+                OR fqc_function_undistributed LIKE CONCAT('%', #{queryParams.keywords}, '%')
                 )
             </if>
             <!-- 创建时间范围查询 -->
